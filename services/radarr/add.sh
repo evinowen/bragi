@@ -5,7 +5,7 @@ set -euo pipefail
 SERVICE_NAME="bragi.radarr"
 CONTAINER_NAME="bragi.radarr"
 IMAGE="linuxserver/radarr:latest"
-SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" &> /dev/null && pwd)"
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}

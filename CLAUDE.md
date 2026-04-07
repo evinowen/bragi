@@ -83,6 +83,7 @@ set -euo pipefail
 SERVICE_NAME="bragi.service-name"
 CONTAINER_NAME="bragi.service-name"
 IMAGE="vendor/image:tag"
+SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" &> /dev/null && pwd)"
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
@@ -319,6 +320,7 @@ After services are successfully started and verified, the installer displays web
 6. **Don't hardcode paths** - Use variables for flexibility
 7. **Don't ignore error handling** - Always use `set -euo pipefail`
 8. **Don't forget trailing blank lines** - All files must end with a blank line (POSIX compliance)
+9. **Don't use bare BASH_SOURCE** - Always use `${BASH_SOURCE[0]:-$0}` for compatibility with `set -u`
 
 ## Testing Checklist
 

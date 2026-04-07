@@ -5,7 +5,7 @@ set -euo pipefail
 SERVICE_NAME="bragi.sabnzbd"
 CONTAINER_NAME="bragi.sabnzbd"
 IMAGE="linuxserver/sabnzbd:latest"
-SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" &> /dev/null && pwd)"
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
