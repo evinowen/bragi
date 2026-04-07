@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+  <!-- Radarr Configuration -->
+  <!-- This file contains basic default settings for Radarr -->
+
+  <!-- Application Settings -->
+  <LogLevel>info</LogLevel>
+  <LogRotate>50</LogRotate>
+  <LogSql>False</LogSql>
+  <UpdateMechanism>Docker</UpdateMechanism>
+  <Branch>master</Branch>
+  <AutoUpdate>False</AutoUpdate>
+  <EnableSsl>False</EnableSsl>
+  <SslPort>9797</SslPort>
+  <SslCertPath></SslCertPath>
+  <SslCertPassword></SslCertPassword>
+  <UrlBase>/radarr</UrlBase>
+  <BindAddress>*</BindAddress>
+  <Port>7878</Port>
+  <LaunchBrowser>False</LaunchBrowser>
+  <AuthenticationMethod>None</AuthenticationMethod>
+  <AuthenticationRequired>Enabled</AuthenticationRequired>
+  <Username></Username>
+  <Password></Password>
+  <PasswordConfirmation></PasswordConfirmation>
+  <ApiKey></ApiKey>
+  <ProxyEnabled>False</ProxyEnabled>
+  <ProxyType>Http</ProxyType>
+  <ProxyHostname></ProxyHostname>
+  <ProxyPort>8080</ProxyPort>
+  <ProxyUsername></ProxyUsername>
+  <ProxyPassword></ProxyPassword>
+  <ProxyBypassFilter></ProxyBypassFilter>
+  <ProxyBypassLocalAddresses>True</ProxyBypassLocalAddresses>
+  <CertificateValidation>Enabled</CertificateValidation>
+  <BackupFolder>Backups</BackupFolder>
+  <BackupInterval>7</BackupInterval>
+  <BackupRetention>28</BackupRetention>
+  <CleanupMetadataImages>True</CleanupMetadataImages>
+  <CreateEmptyMovieFolders>False</CreateEmptyMovieFolders>
+  <DeleteEmptyFolders>False</DeleteEmptyFolders>
+  <SkipFreeSpaceCheckWhenImporting>False</SkipFreeSpaceCheckWhenImporting>
+  <MinimumFreeSpaceWhenImporting>100</MinimumFreeSpaceWhenImporting>
+  <CopyUsingHardlinks>True</CopyUsingHardlinks>
+  <ImportExtraFiles>True</ImportExtraFiles>
+  <ExtraFileExtensions>srt,nfo</ExtraFileExtensions>
+  <EnableMediaInfo>True</EnableMediaInfo>
+  <ChmodFolder>755</ChmodFolder>
+  <ChownGroup></ChownGroup>
+  <FileDate>None</FileDate>
+  <RecyclingBin></RecyclingBin>
+  <RecyclingBinCleanupDays>7</RecyclingBinCleanupDays>
+  <SetPermissionsLinux>False</SetPermissionsLinux>
+  <AnalyticEnabled>True</AnalyticEnabled>
+  <LogAnalyticEnabled>True</LogAnalyticEnabled>
+
+  <!-- Media Management -->
+  <RenameMovies>True</RenameMovies>
+  <ReplaceIllegalCharacters>True</ReplaceIllegalCharacters>
+  <ColonReplacementFormat>Delete</ColonReplacementFormat>
+  <StandardMovieFormat>{Movie Title} ({Release Year}) {Quality Full}</StandardMovieFormat>
+  <MovieFolderFormat>{Movie Title} ({Release Year})</MovieFolderFormat>
+  <CreateEmptyMovieFolders>False</CreateEmptyMovieFolders>
+  <DeleteEmptyFolders>False</DeleteEmptyFolders>
+
+  <!-- Download Clients -->
+  <EnableCompletedDownloadHandling>True</EnableCompletedDownloadHandling>
+  <RemoveCompletedDownloads>False</RemoveCompletedDownloads>
+  <RemoveFailedDownloads>True</RemoveFailedDownloads>
+  <AutoRedownloadFailed>True</AutoRedownloadFailed>
+  <AutoRedownloadFailedFromInteractiveSearch>True</AutoRedownloadFailedFromInteractiveSearch>
+
+  <!-- Indexers -->
+  <WhitelistedHardcodedSubs></WhitelistedHardcodedSubs>
+  <MaximumSize>0</MaximumSize>
+  <MinimumAge>0</MinimumAge>
+  <Retention>0</Retention>
+  <RssSyncInterval>15</RssSyncInterval>
+  <AvailabilityDelay>0</AvailabilityDelay>
+
+  <!-- Quality -->
+  <MinimumCustomFormatScore>0</MinimumCustomFormatScore>
+  <UpgradeAllowed>True</UpgradeAllowed>
+
+  <!-- Lists -->
+  <ListSyncLevel>disabled</ListSyncLevel>
+  <ImportListSyncInterval>1440</ImportListSyncInterval>
+  <ListUpdateInterval>24</ListUpdateInterval>
+  <CleanupMetadataImages>True</CleanupMetadataImages>
+
+  <!-- Notifications -->
+  <OnGrab>False</OnGrab>
+  <OnDownload>True</OnDownload>
+  <OnUpgrade>True</OnUpgrade>
+  <OnRename>False</OnRename>
+  <OnMovieDelete>False</OnMovieDelete>
+  <OnMovieFileDelete>False</OnMovieFileDelete>
+  <OnMovieFileDeleteForUpgrade>True</OnMovieFileDeleteForUpgrade>
+  <OnHealthIssue>False</OnHealthIssue>
+  <OnApplicationUpdate>False</OnApplicationUpdate>
+
+  <!-- UI -->
+  <FirstDayOfWeek>0</FirstDayOfWeek>
+  <CalendarWeekColumnHeader>ddd M/D</CalendarWeekColumnHeader>
+  <ShortDateFormat>MMM D YYYY</ShortDateFormat>
+  <LongDateFormat>dddd, MMMM D YYYY</LongDateFormat>
+  <TimeFormat>h(:mm)a</TimeFormat>
+  <ShowRelativeDates>True</ShowRelativeDates>
+  <EnableColorImpairedMode>False</EnableColorImpairedMode>
+  <UILanguage>1</UILanguage>
+
+</Config>

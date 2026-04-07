@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+  <!-- Sonarr Configuration -->
+  <!-- This file contains basic default settings for Sonarr -->
+
+  <!-- Application Settings -->
+  <LogLevel>info</LogLevel>
+  <LogRotate>50</LogRotate>
+  <LogSql>False</LogSql>
+  <UpdateMechanism>Docker</UpdateMechanism>
+  <Branch>main</Branch>
+  <AutoUpdate>False</AutoUpdate>
+  <EnableSsl>False</EnableSsl>
+  <SslPort>9898</SslPort>
+  <SslCertPath></SslCertPath>
+  <SslCertPassword></SslCertPassword>
+  <UrlBase>/sonarr</UrlBase>
+  <BindAddress>*</BindAddress>
+  <Port>8989</Port>
+  <LaunchBrowser>False</LaunchBrowser>
+  <AuthenticationMethod>None</AuthenticationMethod>
+  <AuthenticationRequired>Enabled</AuthenticationRequired>
+  <Username></Username>
+  <Password></Password>
+  <PasswordConfirmation></PasswordConfirmation>
+  <ApiKey></ApiKey>
+  <ProxyEnabled>False</ProxyEnabled>
+  <ProxyType>Http</ProxyType>
+  <ProxyHostname></ProxyHostname>
+  <ProxyPort>8080</ProxyPort>
+  <ProxyUsername></ProxyUsername>
+  <ProxyPassword></ProxyPassword>
+  <ProxyBypassFilter></ProxyBypassFilter>
+  <ProxyBypassLocalAddresses>True</ProxyBypassLocalAddresses>
+  <CertificateValidation>Enabled</CertificateValidation>
+  <BackupFolder>Backups</BackupFolder>
+  <BackupInterval>7</BackupInterval>
+  <BackupRetention>28</BackupRetention>
+  <CleanupMetadataImages>True</CleanupMetadataImages>
+  <CreateEmptySeriesFolders>False</CreateEmptySeriesFolders>
+  <DeleteEmptyFolders>False</DeleteEmptyFolders>
+  <SkipFreeSpaceCheckWhenImporting>False</SkipFreeSpaceCheckWhenImporting>
+  <MinimumFreeSpaceWhenImporting>100</MinimumFreeSpaceWhenImporting>
+  <CopyUsingHardlinks>True</CopyUsingHardlinks>
+  <ImportExtraFiles>True</ImportExtraFiles>
+  <ExtraFileExtensions>srt,nfo</ExtraFileExtensions>
+  <EnableMediaInfo>True</EnableMediaInfo>
+  <ChmodFolder>755</ChmodFolder>
+  <ChownGroup></ChownGroup>
+  <FileDate>None</FileDate>
+  <RecyclingBin></RecyclingBin>
+  <RecyclingBinCleanupDays>7</RecyclingBinCleanupDays>
+  <SetPermissionsLinux>False</SetPermissionsLinux>
+  <AnalyticEnabled>True</AnalyticEnabled>
+  <LogAnalyticEnabled>True</LogAnalyticEnabled>
+
+  <!-- Media Management -->
+  <RenameEpisodes>True</RenameEpisodes>
+  <ReplaceIllegalCharacters>True</ReplaceIllegalCharacters>
+  <ColonReplacementFormat>Delete</ColonReplacementFormat>
+  <StandardEpisodeFormat>{Series Title} - S{season:00}E{episode:00} - {Episode Title} {Quality Full}</StandardEpisodeFormat>
+  <DailyEpisodeFormat>{Series Title} - {Air-Date} - {Episode Title} {Quality Full}</DailyEpisodeFormat>
+  <AnimeEpisodeFormat>{Series Title} - S{season:00}E{episode:00} - {Episode Title} {Quality Full}</AnimeEpisodeFormat>
+  <SeriesFolderFormat>{Series Title}</SeriesFolderFormat>
+  <SeasonFolderFormat>Season {season}</SeasonFolderFormat>
+  <SpecialsFolderFormat>Specials</SpecialsFolderFormat>
+  <MultiEpisodeStyle>Range</MultiEpisodeStyle>
+
+  <!-- Download Clients -->
+  <EnableCompletedDownloadHandling>True</EnableCompletedDownloadHandling>
+  <RemoveCompletedDownloads>False</RemoveCompletedDownloads>
+  <RemoveFailedDownloads>True</RemoveFailedDownloads>
+  <AutoRedownloadFailed>True</AutoRedownloadFailed>
+  <AutoRedownloadFailedFromInteractiveSearch>True</AutoRedownloadFailedFromInteractiveSearch>
+
+  <!-- Indexers -->
+  <WhitelistedHardcodedSubs></WhitelistedHardcodedSubs>
+  <MaximumSize>0</MaximumSize>
+  <MinimumAge>0</MinimumAge>
+  <Retention>0</Retention>
+  <RssSyncInterval>15</RssSyncInterval>
+  <AvailabilityDelay>0</AvailabilityDelay>
+
+  <!-- UI -->
+  <FirstDayOfWeek>0</FirstDayOfWeek>
+  <CalendarWeekColumnHeader>ddd M/D</CalendarWeekColumnHeader>
+  <ShortDateFormat>MMM D YYYY</ShortDateFormat>
+  <LongDateFormat>dddd, MMMM D YYYY</LongDateFormat>
+  <TimeFormat>h(:mm)a</TimeFormat>
+  <ShowRelativeDates>True</ShowRelativeDates>
+  <EnableColorImpairedMode>False</EnableColorImpairedMode>
+  <ExpandEpisodesByDefault>False</ExpandEpisodesByDefault>
+  <UILanguage>1</UILanguage>
+
+</Config>
