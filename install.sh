@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Trap to catch unexpected exits
+trap 'echo "ERROR: Script exited unexpectedly at line $LINENO. Last command: $BASH_COMMAND" >&2' ERR
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" &> /dev/null && pwd)"
 SERVICES_DIR="$SCRIPT_DIR/services"
 INSTALLED_SERVICES=()
@@ -339,7 +342,14 @@ install_services() {
     fi
 
     # Store installed services for later use
-    INSTALLED_SERVICES=("${installed_services[@]}")
+    INSTALLED_SERVICES=()
+    if [[ ${#installed_services[@]} -gt 0 ]]; then
+        INSTALLED_SERVICES=("${installed_services[@]}")
+        echo "DEBUG: Stored ${#INSTALLED_SERVICES[@]} services for later use"
+    else
+        echo "DEBUG: No services were installed successfully"
+    fi
+    echo "DEBUG: Exiting install_services function"
 }
 
 enable_and_start_services() {
@@ -502,13 +512,17 @@ main() {
     configure_media_directories
     create_media_directories
 
+    echo "DEBUG: Starting service installation..."
     install_services
+    echo "DEBUG: Service installation completed, starting service enablement..."
     enable_and_start_services
+    echo "DEBUG: Service enablement completed, starting verification..."
 
     local verification_success=true
     if ! verify_services_running; then
         verification_success=false
     fi
+    echo "DEBUG: Service verification completed"
 
     echo
     echo "=== Installation Complete ==="
