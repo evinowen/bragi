@@ -95,8 +95,9 @@ configure_media_directories() {
     # Television Shows configuration
     echo "Television Shows:"
     while true; do
-        read -p "  Downloads directory (where files are initially downloaded): " TELEVISION_DOWNLOADS_DIR
-        if [[ -n "$TELEVISION_DOWNLOADS_DIR" ]]; then
+        echo -n "  Downloads directory (where files are initially downloaded): "
+        read TELEVISION_DOWNLOADS_DIR
+        if [[ -n "${TELEVISION_DOWNLOADS_DIR:-}" ]]; then
             TELEVISION_DOWNLOADS_DIR=$(realpath "$TELEVISION_DOWNLOADS_DIR" 2>/dev/null || echo "$TELEVISION_DOWNLOADS_DIR")
             break
         fi
@@ -104,8 +105,9 @@ configure_media_directories() {
     done
 
     while true; do
-        read -p "  Staging directory (temporary processing location): " TELEVISION_STAGING_DIR
-        if [[ -n "$TELEVISION_STAGING_DIR" ]]; then
+        echo -n "  Staging directory (temporary processing location): "
+        read TELEVISION_STAGING_DIR
+        if [[ -n "${TELEVISION_STAGING_DIR:-}" ]]; then
             TELEVISION_STAGING_DIR=$(realpath "$TELEVISION_STAGING_DIR" 2>/dev/null || echo "$TELEVISION_STAGING_DIR")
             break
         fi
@@ -113,8 +115,9 @@ configure_media_directories() {
     done
 
     while true; do
-        read -p "  Storage directory (final organized library): " TELEVISION_STORAGE_DIR
-        if [[ -n "$TELEVISION_STORAGE_DIR" ]]; then
+        echo -n "  Storage directory (final organized library): "
+        read TELEVISION_STORAGE_DIR
+        if [[ -n "${TELEVISION_STORAGE_DIR:-}" ]]; then
             TELEVISION_STORAGE_DIR=$(realpath "$TELEVISION_STORAGE_DIR" 2>/dev/null || echo "$TELEVISION_STORAGE_DIR")
             break
         fi
@@ -124,8 +127,9 @@ configure_media_directories() {
     echo
     echo "Movies:"
     while true; do
-        read -p "  Downloads directory (where files are initially downloaded): " MOVIE_DOWNLOADS_DIR
-        if [[ -n "$MOVIE_DOWNLOADS_DIR" ]]; then
+        echo -n "  Downloads directory (where files are initially downloaded): "
+        read MOVIE_DOWNLOADS_DIR
+        if [[ -n "${MOVIE_DOWNLOADS_DIR:-}" ]]; then
             MOVIE_DOWNLOADS_DIR=$(realpath "$MOVIE_DOWNLOADS_DIR" 2>/dev/null || echo "$MOVIE_DOWNLOADS_DIR")
             break
         fi
@@ -133,8 +137,9 @@ configure_media_directories() {
     done
 
     while true; do
-        read -p "  Staging directory (temporary processing location): " MOVIE_STAGING_DIR
-        if [[ -n "$MOVIE_STAGING_DIR" ]]; then
+        echo -n "  Staging directory (temporary processing location): "
+        read MOVIE_STAGING_DIR
+        if [[ -n "${MOVIE_STAGING_DIR:-}" ]]; then
             MOVIE_STAGING_DIR=$(realpath "$MOVIE_STAGING_DIR" 2>/dev/null || echo "$MOVIE_STAGING_DIR")
             break
         fi
@@ -142,8 +147,9 @@ configure_media_directories() {
     done
 
     while true; do
-        read -p "  Storage directory (final organized library): " MOVIE_STORAGE_DIR
-        if [[ -n "$MOVIE_STORAGE_DIR" ]]; then
+        echo -n "  Storage directory (final organized library): "
+        read MOVIE_STORAGE_DIR
+        if [[ -n "${MOVIE_STORAGE_DIR:-}" ]]; then
             MOVIE_STORAGE_DIR=$(realpath "$MOVIE_STORAGE_DIR" 2>/dev/null || echo "$MOVIE_STORAGE_DIR")
             break
         fi
@@ -210,9 +216,10 @@ create_media_directories() {
 
     echo
     local create_dirs=""
-    while [[ "$create_dirs" != "y" && "$create_dirs" != "n" && "$create_dirs" != "" ]]; do
-        read -p "Would you like to create these directories? [y/N]: " create_dirs
-        create_dirs=$(echo "$create_dirs" | tr '[:upper:]' '[:lower:]')
+    while [[ "${create_dirs:-}" != "y" && "${create_dirs:-}" != "n" && "${create_dirs:-}" != "" ]]; do
+        echo -n "Would you like to create these directories? [y/N]: "
+        read create_dirs
+        create_dirs=$(echo "${create_dirs:-}" | tr '[:upper:]' '[:lower:]')
     done
 
     # Default to 'n' if empty
