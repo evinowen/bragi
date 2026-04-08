@@ -304,12 +304,16 @@ install_services() {
                 export TELEVISION_DOWNLOADS_DIR TELEVISION_STAGING_DIR TELEVISION_LIBRARY_DIR
                 export MOVIE_DOWNLOADS_DIR MOVIE_STAGING_DIR MOVIE_LIBRARY_DIR
 
-                if bash "$install_script"; then
+                echo "Running installation script for $service_name..."
+                if bash "$install_script" 2>&1; then
                     echo "✓ Successfully installed: $service_name"
                     installed_services+=("bragi.$service_name")
                     ((service_count++))
                 else
-                    echo "✗ Failed to install: $service_name"
+                    local exit_code=$?
+                    echo "✗ Failed to install: $service_name (exit code: $exit_code)"
+                    echo "  Installation script: $install_script"
+                    echo "  Check the error output above for details"
                     ((failed_count++))
                 fi
             else
@@ -324,10 +328,14 @@ install_services() {
     echo "Services installed: $service_count"
     echo "Services failed: $failed_count"
 
-    if [[ $failed_count -gt 0 ]]; then
+    if [[ $service_count -eq 0 ]]; then
         echo
-        echo "Some services failed to install. Check the output above for details."
+        echo "ERROR: No services were successfully installed."
         exit 1
+    elif [[ $failed_count -gt 0 ]]; then
+        echo
+        echo "WARNING: Some services failed to install. Check the output above for details."
+        echo "Continuing with successfully installed services."
     fi
 
     # Store installed services for later use
