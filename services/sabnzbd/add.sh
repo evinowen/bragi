@@ -16,7 +16,7 @@ CONFIG_DIR="$DATA_DIR/config"
 
 # Use configured media directories from main installer
 # Fall back to local directories if not provided
-DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/downloads}"
+DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/download}"
 INCOMPLETE_DIR="$DATA_DIR/incomplete"
 
 create_directories() {

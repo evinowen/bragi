@@ -16,9 +16,9 @@ CONFIG_DIR="$DATA_DIR/config"
 
 # Use configured media directories from main installer
 # Fall back to local directories if not provided
-DOWNLOADS_DIR="${MOVIE_DOWNLOADS_DIR:-$DATA_DIR/downloads}"
-STAGING_DIR="${MOVIE_STAGING_DIR:-$DATA_DIR/staging}"
-MOVIES_DIR="${MOVIE_STORAGE_DIR:-$DATA_DIR/movies}"
+DOWNLOADS_DIR="${MOVIE_DOWNLOADS_DIR:-$DATA_DIR/download}"
+STAGING_DIR="${MOVIE_STAGING_DIR:-$DATA_DIR/stage}"
+MOVIES_DIR="${MOVIE_LIBRARY_DIR:-$DATA_DIR/movies}"
 
 create_directories() {
     echo "Creating directories..."

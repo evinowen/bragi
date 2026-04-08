@@ -16,9 +16,9 @@ CONFIG_DIR="$DATA_DIR/config"
 
 # Use configured media directories from main installer
 # Fall back to local directories if not provided
-DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/downloads}"
-STAGING_DIR="${TELEVISION_STAGING_DIR:-$DATA_DIR/staging}"
-TELEVISION_DIR="${TELEVISION_STORAGE_DIR:-$DATA_DIR/television}"
+DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/download}"
+STAGING_DIR="${TELEVISION_STAGING_DIR:-$DATA_DIR/stage}"
+TELEVISION_DIR="${TELEVISION_LIBRARY_DIR:-$DATA_DIR/television}"
 
 create_directories() {
     echo "Creating directories..."

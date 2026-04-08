@@ -9,10 +9,10 @@ INSTALLED_SERVICES=()
 # Media directory configuration
 TELEVISION_DOWNLOADS_DIR=""
 TELEVISION_STAGING_DIR=""
-TELEVISION_STORAGE_DIR=""
+TELEVISION_LIBRARY_DIR=""
 MOVIE_DOWNLOADS_DIR=""
 MOVIE_STAGING_DIR=""
-MOVIE_STORAGE_DIR=""
+MOVIE_LIBRARY_DIR=""
 
 echo "=== Docker Services Installer ==="
 echo
@@ -92,80 +92,98 @@ configure_media_directories() {
     echo "These will be used by media services like SABnzbd, Sonarr, Radarr, etc."
     echo
 
-    # Television Shows configuration
-    echo "Television Shows:"
-    while true; do
-        echo -n "  Downloads directory (where files are initially downloaded): "
-        read TELEVISION_DOWNLOADS_DIR </dev/tty
-        if [[ -n "${TELEVISION_DOWNLOADS_DIR:-}" ]]; then
-            TELEVISION_DOWNLOADS_DIR=$(realpath "$TELEVISION_DOWNLOADS_DIR" 2>/dev/null || echo "$TELEVISION_DOWNLOADS_DIR")
-            break
+    # Ask for configuration mode
+    local config_mode=""
+    while [[ "${config_mode:-}" != "s" && "${config_mode:-}" != "i" ]]; do
+        echo "Configuration mode:"
+        echo "  [s] Simple - Set base directory for each media type (recommended)"
+        echo "  [i] Individual - Set each subdirectory separately"
+        echo -n "Choose configuration mode [s/i]: "
+        read config_mode </dev/tty
+        config_mode=$(echo "${config_mode:-}" | tr '[:upper:]' '[:lower:]')
+        if [[ -z "${config_mode:-}" ]]; then
+            config_mode="s"
         fi
-        echo "  Error: Please enter a valid directory path."
-    done
-
-    while true; do
-        echo -n "  Staging directory (temporary processing location): "
-        read TELEVISION_STAGING_DIR </dev/tty
-        if [[ -n "${TELEVISION_STAGING_DIR:-}" ]]; then
-            TELEVISION_STAGING_DIR=$(realpath "$TELEVISION_STAGING_DIR" 2>/dev/null || echo "$TELEVISION_STAGING_DIR")
-            break
+        if [[ "${config_mode}" != "s" && "${config_mode}" != "i" ]]; then
+            echo "  Error: Please enter 's' for Simple or 'i' for Individual."
         fi
-        echo "  Error: Please enter a valid directory path."
-    done
-
-    while true; do
-        echo -n "  Storage directory (final organized library): "
-        read TELEVISION_STORAGE_DIR </dev/tty
-        if [[ -n "${TELEVISION_STORAGE_DIR:-}" ]]; then
-            TELEVISION_STORAGE_DIR=$(realpath "$TELEVISION_STORAGE_DIR" 2>/dev/null || echo "$TELEVISION_STORAGE_DIR")
-            break
-        fi
-        echo "  Error: Please enter a valid directory path."
     done
 
     echo
-    echo "Movies:"
-    while true; do
-        echo -n "  Downloads directory (where files are initially downloaded): "
+
+    if [[ "$config_mode" == "s" ]]; then
+        # Simple mode - base directories with derived subdirectories
+        echo "Simple Configuration Mode"
+        echo "Enter base directories. Subdirectories (download, stage, library) will be created automatically."
+        echo
+
+        # Television base directory
+        echo "Television Shows:"
+        echo -n "  Base directory [/media/television]: "
+        read television_base </dev/tty
+        television_base="${television_base:-/media/television}"
+        TELEVISION_DOWNLOADS_DIR="$television_base/download"
+        TELEVISION_STAGING_DIR="$television_base/stage"
+        TELEVISION_LIBRARY_DIR="$television_base/library"
+
+        echo
+
+        # Movies base directory
+        echo "Movies:"
+        echo -n "  Base directory [/media/movies]: "
+        read movies_base </dev/tty
+        movies_base="${movies_base:-/media/movies}"
+        MOVIE_DOWNLOADS_DIR="$movies_base/download"
+        MOVIE_STAGING_DIR="$movies_base/stage"
+        MOVIE_LIBRARY_DIR="$movies_base/library"
+
+    else
+        # Individual mode - specify each directory separately
+        echo "Individual Configuration Mode"
+        echo "Specify each directory separately."
+        echo
+
+        # Television Shows configuration
+        echo "Television Shows:"
+        echo -n "  Download directory [/media/television/download]: "
+        read TELEVISION_DOWNLOADS_DIR </dev/tty
+        TELEVISION_DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-/media/television/download}"
+
+        echo -n "  Stage directory [/media/television/stage]: "
+        read TELEVISION_STAGING_DIR </dev/tty
+        TELEVISION_STAGING_DIR="${TELEVISION_STAGING_DIR:-/media/television/stage}"
+
+        echo -n "  Library directory [/media/television/library]: "
+        read TELEVISION_LIBRARY_DIR </dev/tty
+        TELEVISION_LIBRARY_DIR="${TELEVISION_LIBRARY_DIR:-/media/television/library}"
+
+        echo
+
+        # Movies configuration
+        echo "Movies:"
+        echo -n "  Download directory [/media/movies/download]: "
         read MOVIE_DOWNLOADS_DIR </dev/tty
-        if [[ -n "${MOVIE_DOWNLOADS_DIR:-}" ]]; then
-            MOVIE_DOWNLOADS_DIR=$(realpath "$MOVIE_DOWNLOADS_DIR" 2>/dev/null || echo "$MOVIE_DOWNLOADS_DIR")
-            break
-        fi
-        echo "  Error: Please enter a valid directory path."
-    done
+        MOVIE_DOWNLOADS_DIR="${MOVIE_DOWNLOADS_DIR:-/media/movies/download}"
 
-    while true; do
-        echo -n "  Staging directory (temporary processing location): "
+        echo -n "  Stage directory [/media/movies/stage]: "
         read MOVIE_STAGING_DIR </dev/tty
-        if [[ -n "${MOVIE_STAGING_DIR:-}" ]]; then
-            MOVIE_STAGING_DIR=$(realpath "$MOVIE_STAGING_DIR" 2>/dev/null || echo "$MOVIE_STAGING_DIR")
-            break
-        fi
-        echo "  Error: Please enter a valid directory path."
-    done
+        MOVIE_STAGING_DIR="${MOVIE_STAGING_DIR:-/media/movies/stage}"
 
-    while true; do
-        echo -n "  Storage directory (final organized library): "
-        read MOVIE_STORAGE_DIR </dev/tty
-        if [[ -n "${MOVIE_STORAGE_DIR:-}" ]]; then
-            MOVIE_STORAGE_DIR=$(realpath "$MOVIE_STORAGE_DIR" 2>/dev/null || echo "$MOVIE_STORAGE_DIR")
-            break
-        fi
-        echo "  Error: Please enter a valid directory path."
-    done
+        echo -n "  Library directory [/media/movies/library]: "
+        read MOVIE_LIBRARY_DIR </dev/tty
+        MOVIE_LIBRARY_DIR="${MOVIE_LIBRARY_DIR:-/media/movies/library}"
+    fi
 
     echo
     echo "Directory Configuration Summary:"
     echo "Television Shows:"
-    echo "  Downloads: $TELEVISION_DOWNLOADS_DIR"
-    echo "  Staging:   $TELEVISION_STAGING_DIR"
-    echo "  Storage:   $TELEVISION_STORAGE_DIR"
+    echo "  Download:  $TELEVISION_DOWNLOADS_DIR"
+    echo "  Stage:     $TELEVISION_STAGING_DIR"
+    echo "  Library:   $TELEVISION_LIBRARY_DIR"
     echo "Movies:"
-    echo "  Downloads: $MOVIE_DOWNLOADS_DIR"
-    echo "  Staging:   $MOVIE_STAGING_DIR"
-    echo "  Storage:   $MOVIE_STORAGE_DIR"
+    echo "  Download:  $MOVIE_DOWNLOADS_DIR"
+    echo "  Stage:     $MOVIE_STAGING_DIR"
+    echo "  Library:   $MOVIE_LIBRARY_DIR"
 }
 
 create_media_directories() {
@@ -176,10 +194,10 @@ create_media_directories() {
     local -a all_dirs=(
         "$TELEVISION_DOWNLOADS_DIR"
         "$TELEVISION_STAGING_DIR"
-        "$TELEVISION_STORAGE_DIR"
+        "$TELEVISION_LIBRARY_DIR"
         "$MOVIE_DOWNLOADS_DIR"
         "$MOVIE_STAGING_DIR"
-        "$MOVIE_STORAGE_DIR"
+        "$MOVIE_LIBRARY_DIR"
     )
 
     # Remove duplicates and check which don't exist
@@ -283,8 +301,8 @@ install_services() {
 
             if [[ -f "$install_script" ]]; then
                 # Export media directory variables for service scripts
-                export TELEVISION_DOWNLOADS_DIR TELEVISION_STAGING_DIR TELEVISION_STORAGE_DIR
-                export MOVIE_DOWNLOADS_DIR MOVIE_STAGING_DIR MOVIE_STORAGE_DIR
+                export TELEVISION_DOWNLOADS_DIR TELEVISION_STAGING_DIR TELEVISION_LIBRARY_DIR
+                export MOVIE_DOWNLOADS_DIR MOVIE_STAGING_DIR MOVIE_LIBRARY_DIR
 
                 if bash "$install_script"; then
                     echo "✓ Successfully installed: $service_name"
@@ -501,13 +519,13 @@ main() {
     echo
     echo "Configured media directories:"
     echo "Television Shows:"
-    echo "  Downloads: $TELEVISION_DOWNLOADS_DIR"
-    echo "  Staging:   $TELEVISION_STAGING_DIR"
-    echo "  Storage:   $TELEVISION_STORAGE_DIR"
+    echo "  Download:  $TELEVISION_DOWNLOADS_DIR"
+    echo "  Stage:     $TELEVISION_STAGING_DIR"
+    echo "  Library:   $TELEVISION_LIBRARY_DIR"
     echo "Movies:"
-    echo "  Downloads: $MOVIE_DOWNLOADS_DIR"
-    echo "  Staging:   $MOVIE_STAGING_DIR"
-    echo "  Storage:   $MOVIE_STORAGE_DIR"
+    echo "  Download:  $MOVIE_DOWNLOADS_DIR"
+    echo "  Stage:     $MOVIE_STAGING_DIR"
+    echo "  Library:   $MOVIE_LIBRARY_DIR"
 
     display_service_urls
 

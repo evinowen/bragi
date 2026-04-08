@@ -18,26 +18,13 @@ A repository for managing Docker containers as systemd services on Linux systems
 
 ## Quick Start
 
-### Remote Installation
+### Installation
 
-Download and run the installer directly:
+Clone the repository and run the installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/evinowen/bragi/main/install.sh | bash
+git clone https://github.com/evinowen/bragi.git && cd bragi && chmod +x install.sh && ./install.sh
 ```
-
-### Local Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/evinowen/bragi.git
-   cd bragi
-   ```
-
-2. Run the installer:
-   ```bash
-   ./install.sh
-   ```
 
 ## How It Works
 
