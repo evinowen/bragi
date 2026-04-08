@@ -256,10 +256,10 @@ create_media_directories() {
         for dir in "${missing_dirs[@]}"; do
             if mkdir -p "$dir" 2>/dev/null; then
                 echo "✓ Created: $dir"
-                ((created_count++))
+                created_count=$((created_count + 1))
             else
                 echo "✗ Failed to create: $dir"
-                ((failed_count++))
+                failed_count=$((failed_count + 1))
             fi
         done
 
@@ -294,6 +294,8 @@ install_services() {
     local failed_count=0
     local -a installed_services=()
 
+    echo "DEBUG: Initialized service_count=$service_count, failed_count=$failed_count"
+
     for service_dir in "$SERVICES_DIR"/*; do
         if [[ -d "$service_dir" ]]; then
             local service_name=$(basename "$service_dir")
@@ -310,21 +312,28 @@ install_services() {
                 echo "Running installation script for $service_name..."
                 if bash "$install_script" 2>&1; then
                     echo "✓ Successfully installed: $service_name"
+                    echo "DEBUG: Adding bragi.$service_name to installed_services array"
                     installed_services+=("bragi.$service_name")
-                    ((service_count++))
+                    echo "DEBUG: Incrementing service_count from $service_count"
+                    service_count=$((service_count + 1))
+                    echo "DEBUG: service_count is now $service_count"
                 else
                     local exit_code=$?
                     echo "✗ Failed to install: $service_name (exit code: $exit_code)"
                     echo "  Installation script: $install_script"
                     echo "  Check the error output above for details"
-                    ((failed_count++))
+                    failed_count=$((failed_count + 1))
                 fi
             else
                 echo "✗ No add script found: $install_script"
-                ((failed_count++))
+                failed_count=$((failed_count + 1))
             fi
+        else
+            echo "DEBUG: Skipping non-directory: $service_dir"
         fi
+        echo "DEBUG: Completed processing $service_dir, continuing to next service..."
     done
+    echo "DEBUG: Finished processing all services in loop"
 
     echo
     echo "=== Installation Summary ==="
@@ -370,20 +379,20 @@ enable_and_start_services() {
         echo "Enabling service: $service"
         if sudo systemctl enable "$service" &> /dev/null; then
             echo "✓ Enabled: $service"
-            ((enabled_count++))
+            enabled_count=$((enabled_count + 1))
         else
             echo "✗ Failed to enable: $service"
-            ((failed_count++))
+            failed_count=$((failed_count + 1))
             continue
         fi
 
         echo "Starting service: $service"
         if sudo systemctl start "$service" &> /dev/null; then
             echo "✓ Started: $service"
-            ((started_count++))
+            started_count=$((started_count + 1))
         else
             echo "✗ Failed to start: $service"
-            ((failed_count++))
+            failed_count=$((failed_count + 1))
         fi
     done
 
@@ -425,10 +434,10 @@ verify_services_running() {
         for service in "${INSTALLED_SERVICES[@]}"; do
             if systemctl is-active "$service" &> /dev/null; then
                 echo "✓ Running: $service"
-                ((running_count++))
+                running_count=$((running_count + 1))
             else
                 echo "⏳ Not ready: $service"
-                ((failed_count++))
+                failed_count=$((failed_count + 1))
             fi
         done
 
@@ -443,7 +452,7 @@ verify_services_running() {
             sleep 5
         fi
 
-        ((attempt++))
+        attempt=$((attempt + 1))
     done
 
     echo
