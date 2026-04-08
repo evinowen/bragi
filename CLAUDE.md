@@ -323,6 +323,7 @@ After services are successfully started and verified, the installer displays web
 9. **Don't use bare BASH_SOURCE** - Always use `${BASH_SOURCE[0]:-$0}` for compatibility with `set -u`
 10. **Don't use `read -p`** - Use `echo -n` followed by `read` for better cross-platform compatibility
 11. **Use parameter expansion with defaults** - Use `${VAR:-}` instead of `$VAR` when checking variables that might be unset
+12. **Use `</dev/tty` for read commands** - When script may be executed via pipe (`curl | bash`), redirect stdin from terminal for user input
 
 ## Testing Checklist
 
