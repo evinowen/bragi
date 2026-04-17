@@ -39,7 +39,6 @@ create_directories() {
 copy_configuration_files() {
     echo "Copying default configuration files..."
 
-    # Copy config.xml if it doesn't already exist
     if [[ ! -f "$CONFIG_DIR/config.xml" && -f "$SERVICE_DIR/config.xml" ]]; then
         sudo cp "$SERVICE_DIR/config.xml" "$CONFIG_DIR/config.xml"
         sudo chown "$PUID:$PGID" "$CONFIG_DIR/config.xml"
@@ -47,6 +46,14 @@ copy_configuration_files() {
     else
         echo "- Configuration file already exists or template not found"
     fi
+}
+
+generate_api_key() {
+    local api_key
+    api_key=$(openssl rand -hex 16)
+    sudo sed -i "s|<ApiKey>.*</ApiKey>|<ApiKey>${api_key}</ApiKey>|" "$CONFIG_DIR/config.xml"
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/config.xml"
+    echo "✓ API key generated"
 }
 
 pull_image() {
@@ -143,6 +150,7 @@ main() {
 
     create_directories
     copy_configuration_files
+    generate_api_key
     pull_image
     stop_existing_container
     create_container
