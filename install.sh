@@ -113,10 +113,10 @@ configure_usenet() {
     echo -n "  Server host: "
     read USENET_HOST </dev/tty
 
-    echo -n "  Username: "
+    echo -n "  Usenet username: "
     read USENET_USERNAME </dev/tty
 
-    echo -n "  Password: "
+    echo -n "  Usenet password: "
     read -s USENET_PASSWORD </dev/tty
     echo
 
