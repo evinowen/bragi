@@ -16,12 +16,14 @@ CONFIG_DIR="$DATA_DIR/config"
 
 # Use configured media directories from main installer
 # Fall back to local directories if not provided
-DOWNLOADS_DIR="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/download}"
+GENERAL_DOWNLOADS_DIR="$DATA_DIR/download"
+TELEVISION_DOWNLOADS="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/download}"
+MOVIE_DOWNLOADS="${MOVIE_DOWNLOADS_DIR:-$DATA_DIR/movie-download}"
 INCOMPLETE_DIR="$DATA_DIR/incomplete"
 
 create_directories() {
     echo "Creating directories..."
-    sudo mkdir -p "$CONFIG_DIR" "$DOWNLOADS_DIR" "$INCOMPLETE_DIR"
+    sudo mkdir -p "$CONFIG_DIR" "$GENERAL_DOWNLOADS_DIR" "$TELEVISION_DOWNLOADS" "$MOVIE_DOWNLOADS" "$INCOMPLETE_DIR"
     sudo chown -R "$PUID:$PGID" "$DATA_DIR"
     echo "✓ Directories created"
 }
@@ -93,6 +95,14 @@ EOF
     echo "✓ Usenet server configured"
 }
 
+configure_category_dirs() {
+    echo "Configuring category download directories..."
+    sudo sed -i '/^\[\[television\]\]/,/^\[\[/ s|^dir =.*|dir = /downloads/television|' "$CONFIG_DIR/sabnzbd.ini"
+    sudo sed -i '/^\[\[movies\]\]/,/^\[\[/ s|^dir =.*|dir = /downloads/movies|' "$CONFIG_DIR/sabnzbd.ini"
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/sabnzbd.ini"
+    echo "✓ Category directories configured"
+}
+
 pull_image() {
     echo "Pulling Docker image: $IMAGE"
     docker pull "$IMAGE"
@@ -118,7 +128,9 @@ create_container() {
         -e TZ="$TZ" \
         -p 8080:8080 \
         -v "$CONFIG_DIR:/config" \
-        -v "$DOWNLOADS_DIR:/downloads" \
+        -v "$GENERAL_DOWNLOADS_DIR:/downloads" \
+        -v "$TELEVISION_DOWNLOADS:/downloads/television" \
+        -v "$MOVIE_DOWNLOADS:/downloads/movies" \
         -v "$INCOMPLETE_DIR:/incomplete-downloads" \
         "$IMAGE"
     echo "✓ Container created"
@@ -185,6 +197,7 @@ main() {
     copy_configuration_files
     generate_api_keys
     configure_usenet_server
+    configure_category_dirs
     pull_image
     stop_existing_container
     create_container
