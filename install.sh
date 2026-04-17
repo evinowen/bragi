@@ -731,6 +731,7 @@ try:
     config['authenticationRequired'] = 'disabledForLocalAddresses'
     config['username'] = '${ADMIN_USERNAME}'
     config['password'] = '${ADMIN_PASSWORD}'
+    config['passwordConfirmation'] = '${ADMIN_PASSWORD}'
 
     data = json.dumps(config).encode()
     req = urllib.request.Request(
@@ -783,6 +784,7 @@ try:
     config['authenticationRequired'] = 'disabledForLocalAddresses'
     config['username'] = '${ADMIN_USERNAME}'
     config['password'] = '${ADMIN_PASSWORD}'
+    config['passwordConfirmation'] = '${ADMIN_PASSWORD}'
 
     data = json.dumps(config).encode()
     req = urllib.request.Request(
