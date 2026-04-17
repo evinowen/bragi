@@ -274,11 +274,11 @@ expect {
         send "${USENET_HOST:-}\r"
         exp_continue
     }
-    -re {Username:} {
+    -re {Usenet username:} {
         send "${USENET_USERNAME:-}\r"
         exp_continue
     }
-    -re {Password:} {
+    -re {Usenet password:} {
         send "${USENET_PASSWORD:-}\r"
         exp_continue
     }
