@@ -360,7 +360,7 @@ check_http() {
     local status
 
     while [[ $attempt -le $max_attempts ]]; do
-        status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+        status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -L "$url")
         if [[ "$status" == "200" ]]; then
             pass "$description"
             return
