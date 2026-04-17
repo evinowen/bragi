@@ -568,6 +568,8 @@ configure_download_clients() {
 
     configure_sonarr_auth
     configure_radarr_auth
+    configure_sonarr_metadata
+    configure_radarr_metadata
     configure_sonarr_root_folder
     configure_radarr_root_folder
     configure_sonarr_download_client "$sabnzbd_api_key" "$docker_gateway"
@@ -699,6 +701,100 @@ configure_radarr_download_client() {
         echo "✓ SABnzbd configured as download client in Radarr"
     else
         echo "⚠️  Failed to configure download client in Radarr (HTTP $status)"
+    fi
+}
+
+configure_sonarr_metadata() {
+    local sonarr_api_key
+    sonarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/sonarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$sonarr_api_key" ]]; then
+        echo "⚠️  Sonarr API key not found — skipping metadata configuration"
+        return 0
+    fi
+
+    echo "Configuring Sonarr metadata..."
+    if python3 << PYEOF
+import json, urllib.request, sys
+
+api_key = '${sonarr_api_key}'
+base_url = 'http://localhost:8989/sonarr/api/v3'
+
+try:
+    req = urllib.request.Request(base_url + '/metadata', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        providers = json.loads(r.read())
+
+    for provider in providers:
+        if provider.get('implementation') == 'XbmcMetadata':
+            provider['enable'] = True
+            data = json.dumps(provider).encode()
+            req = urllib.request.Request(
+                base_url + '/metadata/' + str(provider['id']),
+                data=data,
+                headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+                method='PUT'
+            )
+            with urllib.request.urlopen(req) as r:
+                sys.exit(0)
+
+    print('Kodi metadata provider not found', file=sys.stderr)
+    sys.exit(1)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
+        echo "✓ Sonarr Kodi metadata enabled"
+    else
+        echo "⚠️  Failed to configure Sonarr metadata"
+    fi
+}
+
+configure_radarr_metadata() {
+    local radarr_api_key
+    radarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/radarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$radarr_api_key" ]]; then
+        echo "⚠️  Radarr API key not found — skipping metadata configuration"
+        return 0
+    fi
+
+    echo "Configuring Radarr metadata..."
+    if python3 << PYEOF
+import json, urllib.request, sys
+
+api_key = '${radarr_api_key}'
+base_url = 'http://localhost:7878/radarr/api/v3'
+
+try:
+    req = urllib.request.Request(base_url + '/metadata', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        providers = json.loads(r.read())
+
+    for provider in providers:
+        if provider.get('implementation') == 'XbmcMetadata':
+            provider['enable'] = True
+            data = json.dumps(provider).encode()
+            req = urllib.request.Request(
+                base_url + '/metadata/' + str(provider['id']),
+                data=data,
+                headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+                method='PUT'
+            )
+            with urllib.request.urlopen(req) as r:
+                sys.exit(0)
+
+    print('Kodi metadata provider not found', file=sys.stderr)
+    sys.exit(1)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
+        echo "✓ Radarr Kodi metadata enabled"
+    else
+        echo "⚠️  Failed to configure Radarr metadata"
     fi
 }
 
