@@ -568,6 +568,8 @@ configure_download_clients() {
 
     configure_sonarr_auth
     configure_radarr_auth
+    configure_sonarr_root_folder
+    configure_radarr_root_folder
     configure_sonarr_download_client "$sabnzbd_api_key" "$docker_gateway"
     configure_radarr_download_client "$sabnzbd_api_key" "$docker_gateway"
 }
@@ -697,6 +699,54 @@ configure_radarr_download_client() {
         echo "✓ SABnzbd configured as download client in Radarr"
     else
         echo "⚠️  Failed to configure download client in Radarr (HTTP $status)"
+    fi
+}
+
+configure_sonarr_root_folder() {
+    local sonarr_api_key
+    sonarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/sonarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$sonarr_api_key" ]]; then
+        echo "⚠️  Sonarr API key not found — skipping root folder configuration"
+        return 0
+    fi
+
+    echo "Configuring Sonarr root folder..."
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "http://localhost:8989/sonarr/api/v3/rootfolder" \
+        -H "X-Api-Key: ${sonarr_api_key}" \
+        -H "Content-Type: application/json" \
+        -d '{"path": "/tv"}')
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ Sonarr root folder configured (/tv)"
+    else
+        echo "⚠️  Failed to configure Sonarr root folder (HTTP $status)"
+    fi
+}
+
+configure_radarr_root_folder() {
+    local radarr_api_key
+    radarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/radarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$radarr_api_key" ]]; then
+        echo "⚠️  Radarr API key not found — skipping root folder configuration"
+        return 0
+    fi
+
+    echo "Configuring Radarr root folder..."
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "http://localhost:7878/radarr/api/v3/rootfolder" \
+        -H "X-Api-Key: ${radarr_api_key}" \
+        -H "Content-Type: application/json" \
+        -d '{"path": "/movies"}')
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ Radarr root folder configured (/movies)"
+    else
+        echo "⚠️  Failed to configure Radarr root folder (HTTP $status)"
     fi
 }
 
