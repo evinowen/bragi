@@ -39,6 +39,49 @@ copy_configuration_files() {
     fi
 }
 
+configure_usenet_server() {
+    if [[ -z "${USENET_HOST:-}" ]]; then
+        return
+    fi
+
+    local port ssl_flag
+    if [[ "${USENET_SSL:-yes}" == "yes" ]]; then
+        port=563
+        ssl_flag=1
+    else
+        port=119
+        ssl_flag=0
+    fi
+
+    echo "Configuring Usenet server: $USENET_HOST"
+
+    sudo tee -a "$CONFIG_DIR/sabnzbd.ini" > /dev/null << EOF
+
+[[${USENET_HOST}]]
+name = ${USENET_HOST}
+displayname = ${USENET_HOST}
+host = ${USENET_HOST}
+port = ${port}
+timeout = 60
+username = ${USENET_USERNAME:-}
+password = ${USENET_PASSWORD:-}
+connections = 8
+ssl = ${ssl_flag}
+ssl_verify = 2
+ssl_ciphers =
+enable = 1
+required = 0
+optional = 0
+retention = 0
+send_group = 0
+priority = 0
+notes =
+EOF
+
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/sabnzbd.ini"
+    echo "✓ Usenet server configured"
+}
+
 pull_image() {
     echo "Pulling Docker image: $IMAGE"
     docker pull "$IMAGE"
@@ -129,6 +172,7 @@ main() {
 
     create_directories
     copy_configuration_files
+    configure_usenet_server
     pull_image
     stop_existing_container
     create_container
