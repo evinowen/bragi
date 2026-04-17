@@ -424,6 +424,9 @@ verify_services_running() {
     local max_attempts=12  # 60 seconds total (5 second intervals)
     local attempt=1
 
+    # Track services that have been restarted to avoid infinite restart loops
+    local -A restart_attempts=()
+
     while [[ $attempt -le $max_attempts ]]; do
         running_count=0
         failed_count=0
@@ -432,13 +435,37 @@ verify_services_running() {
         echo "Verification attempt $attempt/$max_attempts:"
 
         for service in "${INSTALLED_SERVICES[@]}"; do
-            if systemctl is-active "$service" &> /dev/null; then
-                echo "✓ Running: $service"
-                running_count=$((running_count + 1))
-            else
-                echo "⏳ Not ready: $service"
-                failed_count=$((failed_count + 1))
-            fi
+            local service_state=$(systemctl is-active "$service" 2>/dev/null || echo "unknown")
+
+            case "$service_state" in
+                "active")
+                    echo "✓ Running: $service"
+                    running_count=$((running_count + 1))
+                    ;;
+                "activating")
+                    echo "⏳ Starting: $service (activating)"
+                    failed_count=$((failed_count + 1))
+                    ;;
+                "inactive"|"failed"|"unknown")
+                    # Check if we've already tried to restart this service
+                    if [[ -z "${restart_attempts[$service]:-}" ]]; then
+                        echo "🔄 Restarting: $service (state: $service_state)"
+                        if sudo systemctl restart "$service" &>/dev/null; then
+                            echo "   Restart command sent for $service"
+                            restart_attempts[$service]=1
+                        else
+                            echo "   Failed to restart $service"
+                        fi
+                    else
+                        echo "✗ Failed: $service (state: $service_state, restart attempted)"
+                    fi
+                    failed_count=$((failed_count + 1))
+                    ;;
+                *)
+                    echo "❓ Unknown state: $service ($service_state)"
+                    failed_count=$((failed_count + 1))
+                    ;;
+            esac
         done
 
         if [[ $failed_count -eq 0 ]]; then
@@ -460,7 +487,14 @@ verify_services_running() {
     echo "Services running: $running_count"
     echo "Services not ready: $failed_count"
     echo
-    echo "Services that are not ready may need additional time to start."
+    echo "Services that failed to start:"
+    for service in "${INSTALLED_SERVICES[@]}"; do
+        local service_state=$(systemctl is-active "$service" 2>/dev/null || echo "unknown")
+        if [[ "$service_state" != "active" ]]; then
+            echo "  - $service (state: $service_state)"
+        fi
+    done
+    echo
     echo "Check individual service status with:"
     echo "  sudo systemctl status <service-name>"
     echo "  docker logs <container-name>"
