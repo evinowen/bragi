@@ -23,6 +23,10 @@ USENET_USERNAME=""
 USENET_PASSWORD=""
 USENET_SSL="yes"
 
+# Admin credentials
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD=""
+
 echo "=== Docker Services Installer ==="
 echo
 
@@ -92,6 +96,11 @@ get_host_ip() {
     fi
 
     echo "$host_ip"
+}
+
+generate_credentials() {
+    ADMIN_PASSWORD=$(openssl rand -hex 8)
+    echo "✓ Admin credentials generated"
 }
 
 configure_usenet() {
@@ -557,6 +566,8 @@ configure_download_clients() {
     local docker_gateway
     docker_gateway=$(docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || echo "172.17.0.1")
 
+    configure_sonarr_auth
+    configure_radarr_auth
     configure_sonarr_download_client "$sabnzbd_api_key" "$docker_gateway"
     configure_radarr_download_client "$sabnzbd_api_key" "$docker_gateway"
 }
@@ -689,6 +700,119 @@ configure_radarr_download_client() {
     fi
 }
 
+configure_sonarr_auth() {
+    local sonarr_api_key
+    sonarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/sonarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$sonarr_api_key" ]]; then
+        echo "⚠️  Sonarr API key not found — skipping auth configuration"
+        return 0
+    fi
+
+    echo "Waiting for Sonarr API..."
+    if ! wait_for_api "http://localhost:8989/sonarr/api/v3/system/status" "$sonarr_api_key"; then
+        echo "⚠️  Sonarr API did not become ready — skipping auth configuration"
+        return 0
+    fi
+
+    echo "Configuring Sonarr authentication..."
+    if python3 << PYEOF
+import json, urllib.request, sys
+
+api_key = '${sonarr_api_key}'
+base_url = 'http://localhost:8989/sonarr/api/v3'
+
+try:
+    req = urllib.request.Request(base_url + '/config/host', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        config = json.loads(r.read())
+
+    config['authenticationMethod'] = 'forms'
+    config['authenticationRequired'] = 'disabledForLocalAddresses'
+    config['username'] = '${ADMIN_USERNAME}'
+    config['password'] = '${ADMIN_PASSWORD}'
+
+    data = json.dumps(config).encode()
+    req = urllib.request.Request(
+        base_url + '/config/host',
+        data=data,
+        headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+        method='PUT'
+    )
+    with urllib.request.urlopen(req) as r:
+        sys.exit(0)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
+        echo "✓ Sonarr authentication configured"
+    else
+        echo "⚠️  Failed to configure Sonarr authentication"
+    fi
+}
+
+configure_radarr_auth() {
+    local radarr_api_key
+    radarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/radarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$radarr_api_key" ]]; then
+        echo "⚠️  Radarr API key not found — skipping auth configuration"
+        return 0
+    fi
+
+    echo "Waiting for Radarr API..."
+    if ! wait_for_api "http://localhost:7878/radarr/api/v3/system/status" "$radarr_api_key"; then
+        echo "⚠️  Radarr API did not become ready — skipping auth configuration"
+        return 0
+    fi
+
+    echo "Configuring Radarr authentication..."
+    if python3 << PYEOF
+import json, urllib.request, sys
+
+api_key = '${radarr_api_key}'
+base_url = 'http://localhost:7878/radarr/api/v3'
+
+try:
+    req = urllib.request.Request(base_url + '/config/host', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        config = json.loads(r.read())
+
+    config['authenticationMethod'] = 'forms'
+    config['authenticationRequired'] = 'disabledForLocalAddresses'
+    config['username'] = '${ADMIN_USERNAME}'
+    config['password'] = '${ADMIN_PASSWORD}'
+
+    data = json.dumps(config).encode()
+    req = urllib.request.Request(
+        base_url + '/config/host',
+        data=data,
+        headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+        method='PUT'
+    )
+    with urllib.request.urlopen(req) as r:
+        sys.exit(0)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
+        echo "✓ Radarr authentication configured"
+    else
+        echo "⚠️  Failed to configure Radarr authentication"
+    fi
+}
+
+display_credentials() {
+    echo
+    echo "=== Admin Credentials ==="
+    echo "  Username: $ADMIN_USERNAME"
+    echo "  Password: $ADMIN_PASSWORD"
+    echo
+    echo "Use these credentials to log in to Sonarr and Radarr."
+}
+
 display_service_urls() {
     if [[ ${#INSTALLED_SERVICES[@]} -eq 0 ]]; then
         return 0
@@ -739,6 +863,7 @@ main() {
     check_systemd
     check_permissions
 
+    generate_credentials
     configure_usenet
     configure_media_directories
     create_media_directories
@@ -782,6 +907,7 @@ main() {
     echo "  Stage:     $MOVIE_STAGING_DIR"
     echo "  Library:   $MOVIE_LIBRARY_DIR"
 
+    display_credentials
     display_service_urls
 
     echo
