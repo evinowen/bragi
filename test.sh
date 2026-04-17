@@ -250,8 +250,11 @@ EOF
 
     # run_install.sh: clones the repo and drives install.sh with expect.
     # install.sh reads from /dev/tty, so expect is required to supply answers.
-    # Answers given: simple mode, default TV and movie directories, create dirs = y.
-    cat > "$WORK_DIR/run_install.sh" << 'EOF'
+    # Answers given: Usenet credentials from test.env, simple mode, default media dirs, create dirs = y.
+    local ssl_response=""
+    [[ "${USENET_SSL:-yes}" != "yes" ]] && ssl_response="n"
+
+    cat > "$WORK_DIR/run_install.sh" << EOF
 #!/bin/bash
 set -euo pipefail
 
@@ -267,6 +270,22 @@ log_user 1
 spawn bash /root/bragi/install.sh
 
 expect {
+    -re {Server host:} {
+        send "${USENET_HOST:-}\r"
+        exp_continue
+    }
+    -re {Username:} {
+        send "${USENET_USERNAME:-}\r"
+        exp_continue
+    }
+    -re {Password:} {
+        send "${USENET_PASSWORD:-}\r"
+        exp_continue
+    }
+    -re {Enable SSL\? \[Y/n\]:} {
+        send "${ssl_response}\r"
+        exp_continue
+    }
     -re {Choose configuration mode \[s/i\]:} {
         send "s\r"
         exp_continue
@@ -287,8 +306,8 @@ expect {
 }
 
 set wait_result [wait]
-set exit_code [lindex $wait_result 3]
-exit $exit_code
+set exit_code [lindex \$wait_result 3]
+exit \$exit_code
 EXPECT
 EOF
 
