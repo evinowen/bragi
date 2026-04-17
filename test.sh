@@ -426,6 +426,11 @@ report_results() {
 
     if [[ $FAIL -eq 0 ]]; then
         echo -e "\n${GREEN}All tests passed — bragi installed successfully.${NC}\n"
+        echo "=== Service Web Interfaces ==="
+        echo "  SABnzbd:  http://${INSTANCE_IP}:8080"
+        echo "  Sonarr:   http://${INSTANCE_IP}:8989/sonarr"
+        echo "  Radarr:   http://${INSTANCE_IP}:7878/radarr"
+        echo
         exit 0
     else
         echo -e "\n${RED}$FAIL test(s) failed. Review output above for details.${NC}\n"
