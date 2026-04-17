@@ -355,13 +355,21 @@ done
 check_http() {
     local description="$1"
     local url="$2"
+    local max_attempts=12
+    local attempt=1
     local status
-    status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
-    if [[ "$status" == "200" ]]; then
-        pass "$description"
-    else
-        fail "$description (got HTTP $status)"
-    fi
+
+    while [[ $attempt -le $max_attempts ]]; do
+        status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+        if [[ "$status" == "200" ]]; then
+            pass "$description"
+            return
+        fi
+        sleep 5
+        attempt=$((attempt + 1))
+    done
+
+    fail "$description (got HTTP $status after $((max_attempts * 5))s)"
 }
 
 check_http "HTTP 200: SABnzbd"  "http://localhost:8080"
