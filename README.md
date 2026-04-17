@@ -205,6 +205,60 @@ main() {
 main "$@"
 ```
 
+## Testing
+
+`test.sh` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
+
+### What the test does
+
+1. Creates an Ubuntu VM on GCP Compute Engine
+2. Installs Docker, git, and `expect` on the VM
+3. Clones the bragi repository and runs `install.sh` non-interactively using `expect`
+4. Verifies that all systemd unit files exist and services are enabled and active
+5. Verifies that all Docker containers exist and data/media directories were created
+6. Deletes the VM and reports a pass/fail summary
+
+### Configuration
+
+Create a `test.env` file in the repository root to configure the test environment:
+
+```bash
+GCP_PROJECT_ID=your-project-id
+GCP_ZONE=us-west1-a
+```
+
+`test.env` is excluded from version control via `.gitignore` — do not commit it.
+
+The following environment variables are supported:
+
+| Variable         | Description                              |
+|------------------|------------------------------------------|
+| `GCP_PROJECT_ID` | GCP project to create the test VM in     |
+| `GCP_ZONE`       | Compute Engine zone for the VM           |
+| `GCP_MACHINE_TYPE` | Machine type (default: `e2-standard-2`) |
+| `SKIP_CLEANUP`   | Set to `true` to keep the VM after the test |
+| `SETUP_FIREWALL` | Set to `true` to create firewall rules for SSH (22) and service ports (8080, 8989, 7878) if they don't exist |
+
+### Running the test
+
+Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated, then run:
+
+```bash
+./test.sh
+```
+
+`test.sh` automatically loads `test.env` if it exists. You can also pass variables inline:
+
+```bash
+GCP_PROJECT_ID=your-project-id GCP_ZONE=us-west1-a ./test.sh
+```
+
+To keep the VM running after the test (useful for debugging):
+
+```bash
+SKIP_CLEANUP=true ./test.sh
+```
+
 ## Troubleshooting
 
 ### Docker Not Found
