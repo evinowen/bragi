@@ -39,6 +39,17 @@ copy_configuration_files() {
     fi
 }
 
+generate_api_keys() {
+    local api_key nzb_key
+    api_key=$(openssl rand -hex 16)
+    nzb_key=$(openssl rand -hex 16)
+
+    sudo sed -i "s/^api_key =.*/api_key = ${api_key}/" "$CONFIG_DIR/sabnzbd.ini"
+    sudo sed -i "s/^nzb_key =.*/nzb_key = ${nzb_key}/" "$CONFIG_DIR/sabnzbd.ini"
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/sabnzbd.ini"
+    echo "✓ API keys generated"
+}
+
 configure_usenet_server() {
     if [[ -z "${USENET_HOST:-}" ]]; then
         return
@@ -172,6 +183,7 @@ main() {
 
     create_directories
     copy_configuration_files
+    generate_api_keys
     configure_usenet_server
     pull_image
     stop_existing_container
