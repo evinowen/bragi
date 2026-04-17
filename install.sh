@@ -542,6 +542,153 @@ verify_services_running() {
     return 1
 }
 
+configure_download_clients() {
+    echo
+    echo "=== Configuring Download Clients ==="
+
+    local sabnzbd_api_key
+    sabnzbd_api_key=$(grep -oP '^api_key\s*=\s*\K\S+' /opt/sabnzbd/config/sabnzbd.ini 2>/dev/null || true)
+
+    if [[ -z "$sabnzbd_api_key" ]]; then
+        echo "⚠️  SABnzbd API key not found — skipping download client configuration"
+        return 0
+    fi
+
+    local docker_gateway
+    docker_gateway=$(docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || echo "172.17.0.1")
+
+    configure_sonarr_download_client "$sabnzbd_api_key" "$docker_gateway"
+    configure_radarr_download_client "$sabnzbd_api_key" "$docker_gateway"
+}
+
+wait_for_api() {
+    local url="$1"
+    local api_key="$2"
+    local max_attempts=12
+    local attempt=1
+    while [[ $attempt -le $max_attempts ]]; do
+        local status
+        status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+            -H "X-Api-Key: ${api_key}" "$url" 2>/dev/null || true)
+        if [[ "$status" =~ ^2 ]]; then
+            return 0
+        fi
+        sleep 5
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
+
+configure_sonarr_download_client() {
+    local sabnzbd_api_key="$1"
+    local sabnzbd_host="$2"
+
+    local sonarr_api_key
+    sonarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/sonarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$sonarr_api_key" ]]; then
+        echo "⚠️  Sonarr API key not found — skipping"
+        return 0
+    fi
+
+    echo "Waiting for Sonarr API..."
+    if ! wait_for_api "http://localhost:8989/sonarr/api/v3/system/status" "$sonarr_api_key"; then
+        echo "⚠️  Sonarr API did not become ready — skipping download client configuration"
+        return 0
+    fi
+
+    local payload
+    payload=$(printf '{
+  "enable": true,
+  "protocol": "usenet",
+  "priority": 1,
+  "removeCompletedDownloads": true,
+  "removeFailedDownloads": true,
+  "name": "SABnzbd",
+  "fields": [
+    {"name": "host", "value": "%s"},
+    {"name": "port", "value": 8080},
+    {"name": "apiKey", "value": "%s"},
+    {"name": "tvCategory", "value": "television"},
+    {"name": "recentTvPriority", "value": 0},
+    {"name": "olderTvPriority", "value": 0},
+    {"name": "useSsl", "value": false}
+  ],
+  "implementationName": "SABnzbd",
+  "implementation": "Sabnzbd",
+  "configContract": "SabnzbdSettings",
+  "tags": []
+}' "$sabnzbd_host" "$sabnzbd_api_key")
+
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "http://localhost:8989/sonarr/api/v3/downloadclient" \
+        -H "X-Api-Key: ${sonarr_api_key}" \
+        -H "Content-Type: application/json" \
+        -d "$payload")
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ SABnzbd configured as download client in Sonarr"
+    else
+        echo "⚠️  Failed to configure download client in Sonarr (HTTP $status)"
+    fi
+}
+
+configure_radarr_download_client() {
+    local sabnzbd_api_key="$1"
+    local sabnzbd_host="$2"
+
+    local radarr_api_key
+    radarr_api_key=$(grep -oP '<ApiKey>\K[^<]+' /opt/radarr/config/config.xml 2>/dev/null || true)
+
+    if [[ -z "$radarr_api_key" ]]; then
+        echo "⚠️  Radarr API key not found — skipping"
+        return 0
+    fi
+
+    echo "Waiting for Radarr API..."
+    if ! wait_for_api "http://localhost:7878/radarr/api/v3/system/status" "$radarr_api_key"; then
+        echo "⚠️  Radarr API did not become ready — skipping download client configuration"
+        return 0
+    fi
+
+    local payload
+    payload=$(printf '{
+  "enable": true,
+  "protocol": "usenet",
+  "priority": 1,
+  "removeCompletedDownloads": true,
+  "removeFailedDownloads": true,
+  "name": "SABnzbd",
+  "fields": [
+    {"name": "host", "value": "%s"},
+    {"name": "port", "value": 8080},
+    {"name": "apiKey", "value": "%s"},
+    {"name": "movieCategory", "value": "movies"},
+    {"name": "recentMoviePriority", "value": 0},
+    {"name": "olderMoviePriority", "value": 0},
+    {"name": "useSsl", "value": false}
+  ],
+  "implementationName": "SABnzbd",
+  "implementation": "Sabnzbd",
+  "configContract": "SabnzbdSettings",
+  "tags": []
+}' "$sabnzbd_host" "$sabnzbd_api_key")
+
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "http://localhost:7878/radarr/api/v3/downloadclient" \
+        -H "X-Api-Key: ${radarr_api_key}" \
+        -H "Content-Type: application/json" \
+        -d "$payload")
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ SABnzbd configured as download client in Radarr"
+    else
+        echo "⚠️  Failed to configure download client in Radarr (HTTP $status)"
+    fi
+}
+
 display_service_urls() {
     if [[ ${#INSTALLED_SERVICES[@]} -eq 0 ]]; then
         return 0
@@ -607,6 +754,8 @@ main() {
         verification_success=false
     fi
     echo "DEBUG: Service verification completed"
+
+    configure_download_clients
 
     echo
     echo "=== Installation Complete ==="
