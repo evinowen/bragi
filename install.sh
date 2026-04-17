@@ -121,9 +121,9 @@ configure_usenet() {
 
     echo
     echo "Usenet Configuration Summary:"
-    echo "  Host:     $USENET_HOST"
-    echo "  Username: $USENET_USERNAME"
-    echo "  SSL:      $USENET_SSL"
+    echo "  Host:    $USENET_HOST"
+    echo "  Login:   $USENET_USERNAME"
+    echo "  SSL:     $USENET_SSL"
 
     export USENET_HOST USENET_USERNAME USENET_PASSWORD USENET_SSL
 }
