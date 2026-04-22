@@ -330,6 +330,17 @@ create_media_directories() {
     fi
 }
 
+create_docker_network() {
+    echo
+    echo "=== Creating Docker Network ==="
+    if docker network inspect bragi &>/dev/null; then
+        echo "- Docker network 'bragi' already exists"
+    else
+        docker network create bragi
+        echo "✓ Docker network 'bragi' created"
+    fi
+}
+
 install_services() {
     if [[ ! -d "$SERVICES_DIR" ]]; then
         echo "ERROR: Services directory not found: $SERVICES_DIR"
@@ -563,17 +574,14 @@ configure_download_clients() {
         return 0
     fi
 
-    local docker_gateway
-    docker_gateway=$(docker network inspect bridge --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || echo "172.17.0.1")
-
     configure_sonarr_auth
     configure_radarr_auth
     configure_sonarr_metadata
     configure_radarr_metadata
     configure_sonarr_root_folder
     configure_radarr_root_folder
-    configure_sonarr_download_client "$sabnzbd_api_key" "$docker_gateway"
-    configure_radarr_download_client "$sabnzbd_api_key" "$docker_gateway"
+    configure_sonarr_download_client "$sabnzbd_api_key" "sabnzbd.bragi"
+    configure_radarr_download_client "$sabnzbd_api_key" "sabnzbd.bragi"
 }
 
 wait_for_api() {
@@ -1015,6 +1023,7 @@ main() {
     configure_usenet
     configure_media_directories
     create_media_directories
+    create_docker_network
 
     echo "DEBUG: Starting service installation..."
     install_services
