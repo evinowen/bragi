@@ -75,6 +75,8 @@ create_container() {
     echo "Creating Docker container..."
     docker create \
         --name="$CONTAINER_NAME" \
+        --hostname="sonarr.bragi" \
+        --network="bragi" \
         --restart=unless-stopped \
         -e PUID="$PUID" \
         -e PGID="$PGID" \
