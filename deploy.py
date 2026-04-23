@@ -423,8 +423,13 @@ check_http "HTTP 200: Nginx -> Radarr"  "http://localhost/radarr"
 """
 
 
+def _write_script(path, content):
+    """Write a shell script with Unix line endings regardless of host platform."""
+    with open(path, 'w', newline='\n') as f:
+        f.write(content.lstrip('\n'))
+
 def write_scripts():
-    (work_dir / 'setup.sh').write_text(_SETUP_SH)
+    _write_script(work_dir / 'setup.sh', _SETUP_SH)
 
     indexers_b64 = base64.b64encode(json.dumps(indexers).encode()).decode()
     ssl_response = '' if usenet_ssl else 'n'
@@ -436,9 +441,9 @@ def write_scripts():
         .replace('__USENET_PASS__', usenet_pass)
         .replace('__SSL_RESPONSE__', ssl_response)
     )
-    (work_dir / 'run_install.sh').write_text(run_install)
+    _write_script(work_dir / 'run_install.sh', run_install)
 
-    (work_dir / 'verify.sh').write_text(_VERIFY_SH)
+    _write_script(work_dir / 'verify.sh', _VERIFY_SH)
 
 # ── Phases ────────────────────────────────────────────────────────────────────
 
