@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # ============================================================
-# Bragi Installation Test Script
+# Bragi Deployment Test Script
 #
 # Creates a GCP Compute Engine instance, runs the bragi
 # installer non-interactively via expect, and verifies that
@@ -11,7 +11,7 @@ set -euo pipefail
 #
 # Usage:
 #   export GCP_PROJECT_ID=your-project-id
-#   ./test.sh
+#   ./deploy.sh
 #
 # Environment variables:
 #   GCP_PROJECT_ID   - GCP project ID (required)
@@ -22,9 +22,9 @@ set -euo pipefail
 # ============================================================
 
 # --- Configuration ---
-if [[ -f "$(dirname "${BASH_SOURCE[0]:-$0}")/test.env" ]]; then
+if [[ -f "$(dirname "${BASH_SOURCE[0]:-$0}")/deploy.env" ]]; then
     set -a
-    source "$(dirname "${BASH_SOURCE[0]:-$0}")/test.env"
+    source "$(dirname "${BASH_SOURCE[0]:-$0}")/deploy.env"
     set +a
 fi
 
@@ -251,7 +251,7 @@ EOF
 
     # run_install.sh: clones the repo and drives install.sh with expect.
     # install.sh reads from /dev/tty, so expect is required to supply answers.
-    # Answers given: Usenet credentials from test.env, simple mode, default media dirs, create dirs = y.
+    # Answers given: Usenet credentials from deploy.env, simple mode, default media dirs, create dirs = y.
     local ssl_response=""
     [[ "${USENET_SSL:-yes}" != "yes" ]] && ssl_response="n"
 
