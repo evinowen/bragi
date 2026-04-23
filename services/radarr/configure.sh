@@ -191,9 +191,9 @@ for indexer in indexers:
             'name': indexer.get('name', 'Indexer'),
             'fields': [
                 {'name': 'baseUrl',              'value': indexer.get('url', '')},
-                {'name': 'apiPath',              'value': '/api'},
+                {'name': 'apiPath',              'value': indexer.get('api_path', '/api')},
                 {'name': 'apiKey',               'value': indexer.get('api_key', '')},
-                {'name': 'categories',           'value': [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]},
+                {'name': 'categories',           'value': indexer.get('categories', [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060])},
                 {'name': 'additionalParameters', 'value': ''},
                 {'name': 'multiLanguages',       'value': []},
                 {'name': 'removeYear',           'value': False},
