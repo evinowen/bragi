@@ -370,6 +370,19 @@ find . -type f \( -name "*.sh" -o -name "*.md" -o -name "*.ini" -o -name "*.xml"
 ./install.sh # Run in test environment
 ```
 
+## Git Commit Guidelines
+
+- **Always commit and push** after completing a change — do not leave work uncommitted
+- **One commit per change** — each commit should represent a single logical change, not multiple unrelated changes
+- **One sentence per commit message** — keep messages short and descriptive; no bullet points or multi-line bodies
+
+## Running test.sh
+
+After running `test.sh`, always extract and print the following from the output for the user so they can immediately access and log in to the services:
+
+1. **Service URLs** — from the `=== Service Web Interfaces ===` block near the end (public IP URLs)
+2. **Admin credentials** — from the `=== Admin Credentials ===` block (username and password)
+
 ## Integration Notes
 
 - Repository works with any systemd-based Linux distribution
