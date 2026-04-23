@@ -1,0 +1,16 @@
+gcp_project_id: your-gcp-project-id
+gcp_zone: us-west1-a
+gcp_machine_type: e2-standard-2
+setup_firewall: true
+skip_cleanup: false
+
+usenet:
+  host: news.example.com
+  username: your-username
+  password: your-password
+  ssl: true
+
+indexers:
+  - name: MyIndexer
+    url: https://api.myindexer.com
+    api_key: your-api-key
