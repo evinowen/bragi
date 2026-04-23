@@ -191,10 +191,10 @@ for indexer in indexers:
             'name': indexer.get('name', 'Indexer'),
             'fields': [
                 {'name': 'baseUrl',                    'value': indexer.get('url', '')},
-                {'name': 'apiPath',                    'value': '/api'},
+                {'name': 'apiPath',                    'value': indexer.get('api_path', '/api')},
                 {'name': 'apiKey',                     'value': indexer.get('api_key', '')},
-                {'name': 'categories',                 'value': [5030, 5040]},
-                {'name': 'animeCategories',            'value': []},
+                {'name': 'categories',                 'value': indexer.get('categories', [5030, 5040])},
+                {'name': 'animeCategories',            'value': indexer.get('anime_categories', [])},
                 {'name': 'animeStandardFormatSearch',  'value': False},
                 {'name': 'additionalParameters',       'value': ''},
                 {'name': 'multiLanguages',             'value': []},
