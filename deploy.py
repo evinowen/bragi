@@ -26,6 +26,19 @@ DISK_SIZE     = '30GB'
 NETWORK_TAG   = 'bragi-test'
 SSH_USER      = 'bragi'
 
+# Resolve external executables once at startup so .cmd/.bat wrappers are found
+# correctly on Windows without needing shell=True.
+def _require(name):
+    path = shutil.which(name)
+    if path is None:
+        sys.exit(f'ERROR: {name!r} not found on PATH.')
+    return path
+
+GCLOUD      = _require('gcloud')
+SSH         = _require('ssh')
+SCP         = _require('scp')
+SSH_KEYGEN  = _require('ssh-keygen')
+
 RED    = '\033[0;31m'
 GREEN  = '\033[0;32m'
 YELLOW = '\033[1;33m'
@@ -83,7 +96,7 @@ def run_output(cmd):
 
 def ssh(args, **kwargs):
     base = [
-        'ssh', '-i', str(ssh_key),
+        SSH, '-i', str(ssh_key),
         '-o', 'StrictHostKeyChecking=no',
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'ConnectTimeout=30',
@@ -94,7 +107,7 @@ def ssh(args, **kwargs):
 
 def scp_to(local, remote):
     run([
-        'scp', '-i', str(ssh_key),
+        SCP, '-i', str(ssh_key),
         '-o', 'StrictHostKeyChecking=no',
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'BatchMode=yes',
@@ -139,7 +152,7 @@ def cleanup():
         else:
             log(f'Deleting instance: {instance_name}')
             subprocess.run([
-                'gcloud', 'compute', 'instances', 'delete', instance_name,
+                GCLOUD, 'compute', 'instances', 'delete', instance_name,
                 f'--zone={zone}', f'--project={project_id}', '--quiet',
             ], capture_output=True)
             log('Instance deleted')
@@ -150,8 +163,6 @@ atexit.register(cleanup)
 
 def check_prerequisites():
     log('Checking local prerequisites...')
-    if not shutil.which('gcloud'):
-        sys.exit('ERROR: gcloud CLI is not installed. See https://cloud.google.com/sdk/docs/install')
     if not project_id:
         sys.exit('ERROR: gcp_project_id is not set in deploy.yaml.')
     log(f'Project:      {project_id}')
@@ -164,7 +175,7 @@ def check_prerequisites():
 
 def ensure_firewall_rule(name, ports):
     result = subprocess.run(
-        ['gcloud', 'compute', 'firewall-rules', 'describe', name, f'--project={project_id}'],
+        [GCLOUD, 'compute', 'firewall-rules', 'describe', name, f'--project={project_id}'],
         capture_output=True,
     )
     if result.returncode == 0:
@@ -172,7 +183,7 @@ def ensure_firewall_rule(name, ports):
         return
     log(f"Creating firewall rule '{name}' ({ports})...")
     run([
-        'gcloud', 'compute', 'firewall-rules', 'create', name,
+        GCLOUD, 'compute', 'firewall-rules', 'create', name,
         f'--project={project_id}',
         '--direction=INGRESS', '--action=ALLOW',
         f'--rules={ports}',
@@ -193,14 +204,14 @@ def setup_firewall():
 
 def generate_ssh_key():
     log('Generating temporary SSH key pair...')
-    run(['ssh-keygen', '-t', 'rsa', '-b', '2048', '-f', str(ssh_key), '-N', '', '-q'])
+    run([SSH_KEYGEN, '-t', 'rsa', '-b', '2048', '-f', str(ssh_key), '-N', '', '-q'])
     log('SSH key generated')
 
 def inject_ssh_key():
     pub_key = (ssh_key.parent / (ssh_key.name + '.pub')).read_text().strip()
     log('Injecting SSH public key into instance metadata...')
     run([
-        'gcloud', 'compute', 'instances', 'add-metadata', instance_name,
+        GCLOUD, 'compute', 'instances', 'add-metadata', instance_name,
         f'--zone={zone}', f'--project={project_id}',
         f'--metadata=ssh-keys={SSH_USER}:{pub_key}',
         '--quiet',
@@ -214,13 +225,13 @@ def create_instance():
 
     log(f'Creating Compute Engine instance: {instance_name}')
     existing = subprocess.run(
-        ['gcloud', 'compute', 'instances', 'describe', instance_name,
+        [GCLOUD, 'compute', 'instances', 'describe', instance_name,
          f'--zone={zone}', f'--project={project_id}'],
         capture_output=True,
     )
     if existing.returncode != 0:
         run([
-            'gcloud', 'compute', 'instances', 'create', instance_name,
+            GCLOUD, 'compute', 'instances', 'create', instance_name,
             f'--project={project_id}', f'--zone={zone}',
             f'--machine-type={machine_type}',
             f'--image-family={IMAGE_FAMILY}',
@@ -236,7 +247,7 @@ def create_instance():
 
     instance_created = True
     instance_ip = run_output([
-        'gcloud', 'compute', 'instances', 'describe', instance_name,
+        GCLOUD, 'compute', 'instances', 'describe', instance_name,
         f'--zone={zone}', f'--project={project_id}',
         '--format=get(networkInterfaces[0].accessConfigs[0].natIP)',
     ])
