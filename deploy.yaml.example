@@ -16,3 +16,11 @@ indexers:
     api_key: your-api-key
     television: false
     movies: false
+  - name: Anime Tosho
+    url: https://feed.animetosho.org
+    api_key: ""
+    api_path: /nabapi
+    categories: []
+    anime_categories:
+      - 5070
+    television: true
