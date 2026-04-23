@@ -4,6 +4,9 @@ gcp_machine_type: e2-standard-2
 setup_firewall: true
 skip_cleanup: false
 
+sabnzbd:
+  max_download_speed: ""  # Leave empty for unlimited, or set to e.g. "1M" (1 MB/s), "500K" (500 KB/s)
+
 usenet:
   host: news.example.com
   username: your-username
