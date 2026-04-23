@@ -103,6 +103,17 @@ configure_category_dirs() {
     echo "✓ Category directories configured"
 }
 
+configure_bandwidth() {
+    local max_speed="${SABNZBD_MAX_DOWNLOAD_SPEED:-}"
+    if [[ -z "$max_speed" ]]; then
+        return 0
+    fi
+
+    sudo sed -i "s/^bandwidth_max =.*/bandwidth_max = ${max_speed}/" "$CONFIG_DIR/sabnzbd.ini"
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/sabnzbd.ini"
+    echo "✓ Maximum download speed set to ${max_speed}"
+}
+
 pull_image() {
     echo "Pulling Docker image: $IMAGE"
     docker pull "$IMAGE"
@@ -200,6 +211,7 @@ main() {
     generate_api_keys
     configure_usenet_server
     configure_category_dirs
+    configure_bandwidth
     pull_image
     stop_existing_container
     create_container

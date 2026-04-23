@@ -567,8 +567,7 @@ configure_services() {
     echo "=== Configuring Services ==="
 
     INDEXERS_JSON="${INDEXERS_JSON:-[]}"
-    SABNZBD_MAX_DOWNLOAD_SPEED="${SABNZBD_MAX_DOWNLOAD_SPEED:-}"
-    export ADMIN_USERNAME ADMIN_PASSWORD INDEXERS_JSON SABNZBD_MAX_DOWNLOAD_SPEED
+    export ADMIN_USERNAME ADMIN_PASSWORD INDEXERS_JSON
 
     for service_dir in "$SERVICES_DIR"/*; do
         if [[ -d "$service_dir" ]]; then
