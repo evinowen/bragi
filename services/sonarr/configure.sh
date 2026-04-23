@@ -161,6 +161,27 @@ configure_download_client() {
     fi
 }
 
+configure_remote_path_mapping() {
+    if [[ -z "$SABNZBD_API_KEY" ]]; then
+        echo "⚠️  SABnzbd API key not found — skipping remote path mapping"
+        return 0
+    fi
+
+    echo "Configuring Sonarr remote path mapping..."
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "${BASE_URL}/remotepathmapping" \
+        -H "X-Api-Key: ${API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{\"host\": \"${SABNZBD_HOST}\", \"remotePath\": \"/downloads/television\", \"localPath\": \"/downloads\"}")
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ Sonarr remote path mapping configured"
+    else
+        echo "⚠️  Failed to configure Sonarr remote path mapping (HTTP $status)"
+    fi
+}
+
 main() {
     if [[ -z "$API_KEY" ]]; then
         echo "⚠️  Sonarr API key not found — skipping configuration"
@@ -177,6 +198,7 @@ main() {
     configure_metadata
     configure_root_folder
     configure_download_client
+    configure_remote_path_mapping
 }
 
 main "$@"
