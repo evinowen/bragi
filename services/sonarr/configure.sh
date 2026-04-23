@@ -161,6 +161,67 @@ configure_download_client() {
     fi
 }
 
+configure_indexers() {
+    local indexers_json="${INDEXERS_JSON:-[]}"
+    if [[ "$indexers_json" == "[]" ]] || [[ -z "$indexers_json" ]]; then
+        echo "- No indexers configured, skipping"
+        return 0
+    fi
+
+    echo "Configuring Sonarr indexers..."
+    if INDEXERS_JSON="$indexers_json" API_KEY="$API_KEY" BASE_URL="$BASE_URL" python3 << 'PYEOF'
+import json, os, urllib.request, sys
+
+api_key  = os.environ['API_KEY']
+base_url = os.environ['BASE_URL']
+indexers = json.loads(os.environ['INDEXERS_JSON'])
+
+for indexer in indexers:
+    try:
+        payload = {
+            'enableRss': True,
+            'enableAutomaticSearch': True,
+            'enableInteractiveSearch': True,
+            'supportsRss': True,
+            'supportsSearch': True,
+            'protocol': 'usenet',
+            'priority': 25,
+            'name': indexer.get('name', 'Indexer'),
+            'fields': [
+                {'name': 'baseUrl',                    'value': indexer.get('url', '')},
+                {'name': 'apiPath',                    'value': '/api'},
+                {'name': 'apiKey',                     'value': indexer.get('api_key', '')},
+                {'name': 'categories',                 'value': [5030, 5040]},
+                {'name': 'animeCategories',            'value': []},
+                {'name': 'animeStandardFormatSearch',  'value': False},
+                {'name': 'additionalParameters',       'value': ''},
+                {'name': 'multiLanguages',             'value': []},
+                {'name': 'removeYear',                 'value': False},
+            ],
+            'implementationName': 'Newznab',
+            'implementation':     'Newznab',
+            'configContract':     'NewznabSettings',
+            'tags': [],
+        }
+        data = json.dumps(payload).encode()
+        req  = urllib.request.Request(
+            base_url + '/indexer',
+            data=data,
+            headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+            method='POST',
+        )
+        with urllib.request.urlopen(req):
+            print(f"✓ Indexer added: {indexer.get('name', 'Indexer')}")
+    except Exception as e:
+        print(f"⚠️  Failed to add indexer {indexer.get('name', '')}: {e}", file=sys.stderr)
+PYEOF
+    then
+        echo "✓ Sonarr indexers configured"
+    else
+        echo "⚠️  Failed to configure Sonarr indexers"
+    fi
+}
+
 configure_remote_path_mapping() {
     if [[ -z "$SABNZBD_API_KEY" ]]; then
         echo "⚠️  SABnzbd API key not found — skipping remote path mapping"
@@ -199,6 +260,7 @@ main() {
     configure_root_folder
     configure_download_client
     configure_remote_path_mapping
+    configure_indexers
 }
 
 main "$@"
