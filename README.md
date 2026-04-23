@@ -207,7 +207,7 @@ main "$@"
 
 ## Testing
 
-`deploy.sh` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
+`deploy.py` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
 
 ### What the test does
 
@@ -220,44 +220,55 @@ main "$@"
 
 ### Configuration
 
-Create a `deploy.env` file in the repository root to configure the test environment:
+Create a `deploy.yaml` file in the repository root to configure the deployment:
 
-```bash
-GCP_PROJECT_ID=your-project-id
-GCP_ZONE=us-west1-a
+```yaml
+gcp_project_id: your-project-id
+gcp_zone: us-west1-a
+setup_firewall: true
+skip_cleanup: false
+
+usenet:
+  host: news.example.com
+  username: youruser
+  password: yourpassword
+  ssl: true
+
+indexers:
+  - name: MyIndexer
+    url: https://api.myindexer.com
+    api_key: abc123
 ```
 
-`deploy.env` is excluded from version control via `.gitignore` — do not commit it.
+`deploy.yaml` is excluded from version control via `.gitignore` — do not commit it.
 
-The following environment variables are supported:
+| Key               | Description                                                             |
+|-------------------|-------------------------------------------------------------------------|
+| `gcp_project_id`  | GCP project to create the test VM in                                    |
+| `gcp_zone`        | Compute Engine zone for the VM                                          |
+| `gcp_machine_type`| Machine type (default: `e2-standard-2`)                                 |
+| `skip_cleanup`    | Set to `true` to keep the VM after the test                             |
+| `setup_firewall`  | Set to `true` to create firewall rules for SSH and service ports        |
+| `usenet`          | Usenet provider credentials passed to SABnzbd                           |
+| `indexers`        | List of Newznab indexers to configure in Sonarr and Radarr              |
 
-| Variable         | Description                              |
-|------------------|------------------------------------------|
-| `GCP_PROJECT_ID` | GCP project to create the test VM in     |
-| `GCP_ZONE`       | Compute Engine zone for the VM           |
-| `GCP_MACHINE_TYPE` | Machine type (default: `e2-standard-2`) |
-| `SKIP_CLEANUP`   | Set to `true` to keep the VM after the test |
-| `SETUP_FIREWALL` | Set to `true` to create firewall rules for SSH (22) and service ports (8080, 8989, 7878) if they don't exist |
+### Prerequisites
+
+Install `pyyaml` if not already available:
+
+```bash
+pip3 install pyyaml
+```
+
+Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated.
 
 ### Running the test
 
-Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated, then run:
-
 ```bash
-./deploy.sh
+python3 deploy.py
 ```
 
-`deploy.sh` automatically loads `deploy.env` if it exists. You can also pass variables inline:
-
-```bash
-GCP_PROJECT_ID=your-project-id GCP_ZONE=us-west1-a ./deploy.sh
-```
-
-To keep the VM running after the test (useful for debugging):
-
-```bash
-SKIP_CLEANUP=true ./deploy.sh
-```
+To keep the VM running after the test (useful for debugging), set `skip_cleanup: true` in `deploy.yaml`.
 
 ## Troubleshooting
 

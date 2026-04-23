@@ -376,9 +376,9 @@ find . -type f \( -name "*.sh" -o -name "*.md" -o -name "*.ini" -o -name "*.xml"
 - **One commit per change** — each commit should represent a single logical change, not multiple unrelated changes
 - **One sentence per commit message** — keep messages short and descriptive; no bullet points or multi-line bodies
 
-## Running deploy.sh
+## Running deploy.py
 
-After running `deploy.sh`, always extract and print the following from the output for the user so they can immediately access and log in to the services:
+After running `deploy.py`, always extract and print the following from the output for the user so they can immediately access and log in to the services:
 
 1. **Service URLs** — from the `=== Service Web Interfaces ===` block near the end (public IP URLs)
 2. **Admin credentials** — from the `=== Admin Credentials ===` block (username and password)
