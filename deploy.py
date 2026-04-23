@@ -57,16 +57,17 @@ ssh_key          = work_dir / 'id_rsa'
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-project_id   = ''
-zone         = ''
-machine_type = 'e2-standard-2'
-skip_cleanup = False
-do_firewall  = False
-usenet_host  = ''
-usenet_user  = ''
-usenet_pass  = ''
-usenet_ssl   = True
-indexers     = []
+project_id          = ''
+zone                = ''
+machine_type        = 'e2-standard-2'
+skip_cleanup        = False
+do_firewall         = False
+usenet_host         = ''
+usenet_user         = ''
+usenet_pass         = ''
+usenet_ssl          = True
+indexers            = []
+sabnzbd_max_speed   = ''
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ def scp_to(local, remote):
 
 def load_config():
     global project_id, zone, machine_type, skip_cleanup, do_firewall
-    global usenet_host, usenet_user, usenet_pass, usenet_ssl, indexers
+    global usenet_host, usenet_user, usenet_pass, usenet_ssl, indexers, sabnzbd_max_speed
 
     if not CONFIG_FILE.exists():
         sys.exit(f'ERROR: {CONFIG_FILE} not found.')
@@ -138,7 +139,8 @@ def load_config():
     usenet_pass  = usenet.get('password', '')
     usenet_ssl   = usenet.get('ssl', True)
 
-    indexers     = cfg.get('indexers', [])
+    indexers         = cfg.get('indexers', [])
+    sabnzbd_max_speed = str(cfg.get('sabnzbd', {}).get('max_download_speed', ''))
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 
@@ -279,6 +281,7 @@ _RUN_INSTALL_TEMPLATE = r"""#!/bin/bash
 set -euo pipefail
 
 export INDEXERS_JSON="$(echo '__INDEXERS_B64__' | base64 -d)"
+export SABNZBD_MAX_DOWNLOAD_SPEED="__SABNZBD_MAX_SPEED__"
 
 cd /root
 git clone https://github.com/evinowen/bragi.git
@@ -440,6 +443,7 @@ def write_scripts():
         .replace('__USENET_USER__', usenet_user)
         .replace('__USENET_PASS__', usenet_pass)
         .replace('__SSL_RESPONSE__', ssl_response)
+        .replace('__SABNZBD_MAX_SPEED__', sabnzbd_max_speed)
     )
     _write_script(work_dir / 'run_install.sh', run_install)
 
