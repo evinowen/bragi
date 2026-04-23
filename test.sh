@@ -172,6 +172,7 @@ setup_firewall() {
 
     ensure_firewall_rule "bragi-test-ssh"      "tcp:22"
     ensure_firewall_rule "bragi-test-services" "tcp:8080,tcp:8989,tcp:7878"
+    ensure_firewall_rule "bragi-test-http"     "tcp:80"
 }
 
 # --- Create the VM ---
@@ -330,31 +331,31 @@ check() {
 }
 
 # Systemd unit files exist
-for svc in sabnzbd sonarr radarr; do
+for svc in nginx sabnzbd sonarr radarr; do
     check "Unit file exists: bragi.$svc.service" \
         test -f "/etc/systemd/system/bragi.$svc.service"
 done
 
 # Services are enabled for boot
-for svc in sabnzbd sonarr radarr; do
+for svc in nginx sabnzbd sonarr radarr; do
     check "Service enabled: bragi.$svc" \
         bash -c "systemctl is-enabled bragi.$svc 2>/dev/null | grep -qx 'enabled'"
 done
 
 # Services are active
-for svc in sabnzbd sonarr radarr; do
+for svc in nginx sabnzbd sonarr radarr; do
     check "Service active: bragi.$svc" \
         bash -c "systemctl is-active bragi.$svc 2>/dev/null | grep -qx 'active'"
 done
 
 # Docker containers exist
-for container in sabnzbd sonarr radarr; do
+for container in nginx sabnzbd sonarr radarr; do
     check "Docker container exists: bragi.$container" \
         bash -c "docker ps -a --format '{{.Names}}' | grep -qx 'bragi.$container'"
 done
 
 # Service data directories exist
-for dir in /opt/sabnzbd /opt/sonarr /opt/radarr; do
+for dir in /opt/nginx /opt/sabnzbd /opt/sonarr /opt/radarr; do
     check "Data directory exists: $dir" test -d "$dir"
 done
 
@@ -391,9 +392,12 @@ check_http() {
     fail "$description (got HTTP $status after $((max_attempts * 5))s)"
 }
 
-check_http "HTTP 200: SABnzbd"  "http://localhost:8080"
-check_http "HTTP 200: Sonarr"   "http://localhost:8989/sonarr"
-check_http "HTTP 200: Radarr"   "http://localhost:7878/radarr"
+check_http "HTTP 200: SABnzbd"          "http://localhost:8080"
+check_http "HTTP 200: Sonarr"           "http://localhost:8989/sonarr"
+check_http "HTTP 200: Radarr"           "http://localhost:7878/radarr"
+check_http "HTTP 200: Nginx → SABnzbd"  "http://localhost/sabnzbd"
+check_http "HTTP 200: Nginx → Sonarr"   "http://localhost/sonarr"
+check_http "HTTP 200: Nginx → Radarr"   "http://localhost/radarr"
 EOF
 }
 
@@ -446,9 +450,9 @@ report_results() {
     if [[ $FAIL -eq 0 ]]; then
         echo -e "\n${GREEN}All tests passed — bragi installed successfully.${NC}\n"
         echo "=== Service Web Interfaces ==="
-        echo "  SABnzbd:  http://${INSTANCE_IP}:8080"
-        echo "  Sonarr:   http://${INSTANCE_IP}:8989/sonarr"
-        echo "  Radarr:   http://${INSTANCE_IP}:7878/radarr"
+        echo "  SABnzbd:  http://${INSTANCE_IP}/sabnzbd"
+        echo "  Sonarr:   http://${INSTANCE_IP}/sonarr"
+        echo "  Radarr:   http://${INSTANCE_IP}/radarr"
         echo
         exit 0
     else
