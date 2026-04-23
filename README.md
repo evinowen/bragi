@@ -252,6 +252,40 @@ indexers:
 | `usenet`          | Usenet provider credentials passed to SABnzbd                           |
 | `indexers`        | List of Newznab indexers to configure in Sonarr and Radarr              |
 
+Each entry in `indexers` supports the following fields:
+
+| Field             | Required | Description                                                                          |
+|-------------------|----------|--------------------------------------------------------------------------------------|
+| `name`            | yes      | Display name for the indexer                                                         |
+| `url`             | yes      | Base URL of the indexer (e.g. `https://api.nzbgeek.info`)                            |
+| `api_key`         | yes      | API key issued by the indexer; use `""` for indexers that don't require one          |
+| `television`      | yes      | `true` to add this indexer to Sonarr                                                 |
+| `movies`          | yes      | `true` to add this indexer to Radarr                                                 |
+| `api_path`        | no       | API path on the indexer host (default: `/api`)                                       |
+| `categories`      | no       | Newznab category IDs to search; overrides the service default (see table below)      |
+| `anime_categories`| no       | Anime-specific category IDs for Sonarr (Sonarr only, default: `[]`)                  |
+
+#### Newznab Categories
+
+| ID   | Category           | ID   | Category           |
+|------|--------------------|------|--------------------|
+| 2000 | Movies             | 5000 | TV                 |
+| 2010 | Movies/Foreign     | 5010 | TV/WEB-DL          |
+| 2020 | Movies/Other       | 5020 | TV/Foreign         |
+| 2030 | Movies/SD          | 5030 | TV/SD              |
+| 2040 | Movies/HD          | 5040 | TV/HD              |
+| 2045 | Movies/UHD         | 5045 | TV/UHD             |
+| 2050 | Movies/BluRay      | 5050 | TV/Other           |
+| 2060 | Movies/3D          | 5060 | TV/Sport           |
+|      |                    | 5070 | TV/Anime           |
+|      |                    | 5080 | TV/Documentary     |
+
+**Defaults** — when `categories` is not specified, each service uses a sensible default:
+- Sonarr: `[5030, 5040]` (TV/SD and TV/HD)
+- Radarr: `[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]` (all Movies subcategories)
+
+Indexers that use a non-standard API path or anime-only categories (like Anime Tosho) should override these explicitly. See `deploy.yaml.example` for an example.
+
 ### Prerequisites
 
 Install `pyyaml` if not already available:
