@@ -601,22 +601,41 @@ display_service_urls() {
     echo "Access your services at the following URLs:"
     echo
 
+    local has_nginx=false
+    for service in "${INSTALLED_SERVICES[@]}"; do
+        if [[ "${service#bragi.}" == "nginx" ]]; then
+            has_nginx=true
+            break
+        fi
+    done
+
     for service in "${INSTALLED_SERVICES[@]}"; do
         local service_name="${service#bragi.}"  # Remove bragi. prefix
-        local url=""
 
         case "$service_name" in
+            "nginx")
+                echo "  Nginx:    http://$host_ip (reverse proxy)"
+                ;;
             "sabnzbd")
-                url="http://$host_ip:8080"
-                echo "  SABnzbd:  $url"
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  SABnzbd:  http://$host_ip/sabnzbd"
+                else
+                    echo "  SABnzbd:  http://$host_ip:8080"
+                fi
                 ;;
             "sonarr")
-                url="http://$host_ip:8989/sonarr"
-                echo "  Sonarr:   $url"
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Sonarr:   http://$host_ip/sonarr"
+                else
+                    echo "  Sonarr:   http://$host_ip:8989/sonarr"
+                fi
                 ;;
             "radarr")
-                url="http://$host_ip:7878/radarr"
-                echo "  Radarr:   $url"
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Radarr:   http://$host_ip/radarr"
+                else
+                    echo "  Radarr:   http://$host_ip:7878/radarr"
+                fi
                 ;;
             *)
                 echo "  $service_name: (check service documentation for port)"
