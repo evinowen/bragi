@@ -177,6 +177,8 @@ base_url = os.environ['BASE_URL']
 indexers = json.loads(os.environ['INDEXERS_JSON'])
 
 for indexer in indexers:
+    if not indexer.get('movies', False):
+        continue
     try:
         payload = {
             'enableRss': True,
