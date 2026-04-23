@@ -566,7 +566,8 @@ configure_services() {
     echo
     echo "=== Configuring Services ==="
 
-    export ADMIN_USERNAME ADMIN_PASSWORD
+    INDEXERS_JSON="${INDEXERS_JSON:-[]}"
+    export ADMIN_USERNAME ADMIN_PASSWORD INDEXERS_JSON
 
     for service_dir in "$SERVICES_DIR"/*; do
         if [[ -d "$service_dir" ]]; then
