@@ -207,7 +207,7 @@ main "$@"
 
 ## Testing
 
-`test.sh` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
+`deploy.sh` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
 
 ### What the test does
 
@@ -220,14 +220,14 @@ main "$@"
 
 ### Configuration
 
-Create a `test.env` file in the repository root to configure the test environment:
+Create a `deploy.env` file in the repository root to configure the test environment:
 
 ```bash
 GCP_PROJECT_ID=your-project-id
 GCP_ZONE=us-west1-a
 ```
 
-`test.env` is excluded from version control via `.gitignore` — do not commit it.
+`deploy.env` is excluded from version control via `.gitignore` — do not commit it.
 
 The following environment variables are supported:
 
@@ -244,19 +244,19 @@ The following environment variables are supported:
 Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated, then run:
 
 ```bash
-./test.sh
+./deploy.sh
 ```
 
-`test.sh` automatically loads `test.env` if it exists. You can also pass variables inline:
+`deploy.sh` automatically loads `deploy.env` if it exists. You can also pass variables inline:
 
 ```bash
-GCP_PROJECT_ID=your-project-id GCP_ZONE=us-west1-a ./test.sh
+GCP_PROJECT_ID=your-project-id GCP_ZONE=us-west1-a ./deploy.sh
 ```
 
 To keep the VM running after the test (useful for debugging):
 
 ```bash
-SKIP_CLEANUP=true ./test.sh
+SKIP_CLEANUP=true ./deploy.sh
 ```
 
 ## Troubleshooting
