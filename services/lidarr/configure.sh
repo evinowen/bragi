@@ -107,17 +107,55 @@ PYEOF
 
 configure_root_folder() {
     echo "Configuring Lidarr root folder..."
-    local status
-    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-        "${BASE_URL}/rootfolder" \
-        -H "X-Api-Key: ${API_KEY}" \
-        -H "Content-Type: application/json" \
-        -d '{"path": "/music", "name": "Music"}')
+    if python3 << PYEOF
+import json, urllib.request, sys
 
-    if [[ "$status" =~ ^2 ]]; then
+api_key = '${API_KEY}'
+base_url = '${BASE_URL}'
+
+try:
+    req = urllib.request.Request(base_url + '/qualityprofile', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        profiles = json.loads(r.read())
+    if not profiles:
+        print('No quality profiles found', file=sys.stderr)
+        sys.exit(1)
+    quality_profile_id = profiles[0]['id']
+
+    req = urllib.request.Request(base_url + '/metadataprofile', headers={'X-Api-Key': api_key})
+    with urllib.request.urlopen(req) as r:
+        profiles = json.loads(r.read())
+    if not profiles:
+        print('No metadata profiles found', file=sys.stderr)
+        sys.exit(1)
+    metadata_profile_id = profiles[0]['id']
+
+    payload = {
+        'name': 'Music',
+        'path': '/music',
+        'defaultQualityProfileId': quality_profile_id,
+        'defaultMetadataProfileId': metadata_profile_id,
+        'defaultMonitorOption': 'all',
+        'defaultNewItemMonitorOption': 'all',
+        'defaultTags': []
+    }
+    data = json.dumps(payload).encode()
+    req = urllib.request.Request(
+        base_url + '/rootfolder',
+        data=data,
+        headers={'X-Api-Key': api_key, 'Content-Type': 'application/json'},
+        method='POST'
+    )
+    urllib.request.urlopen(req)
+    sys.exit(0)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
         echo "✓ Lidarr root folder configured (/music)"
     else
-        echo "⚠️  Failed to configure Lidarr root folder (HTTP $status)"
+        echo "⚠️  Failed to configure Lidarr root folder"
     fi
 }
 

@@ -19,7 +19,8 @@
       "url": "https://api.myindexer.com",
       "api_key": "your-api-key",
       "television": false,
-      "movies": false
+      "movies": false,
+      "music": false
     },
     {
       "name": "Anime Tosho",
