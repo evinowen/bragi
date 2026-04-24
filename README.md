@@ -50,17 +50,12 @@ flowchart LR
     NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
-    downloaders ~~~ managers
-    managers ~~~ libraries
-    libraries ~~~ servers
-    servers ~~~ NGX
-
     UP -->|content downloads| SAB
     BT_SRC -->|content downloads| TRN
-    SON <-->|download requests and completed downloads| SAB
-    SON <-->|download requests and completed downloads| TRN
-    RAD <-->|download requests and completed downloads| SAB
-    RAD <-->|download requests and completed downloads| TRN
+    SAB -->|completed downloads| SON
+    SAB -->|completed downloads| RAD
+    TRN -->|completed downloads| SON
+    TRN -->|completed downloads| RAD
     SON -->|sorts into| TL
     RAD -->|sorts into| ML
     TL -->|library reads| JF
