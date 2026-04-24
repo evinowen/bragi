@@ -23,19 +23,25 @@ flowchart LR
     BT_SRC([BitTorrent Swarm])
 
     subgraph downloaders[Download Clients]
+        direction TB
         SAB["SABnzbd<br>Usenet Downloader"]
         TRN["Transmission<br>BitTorrent Downloader"]
     end
 
     subgraph managers[Media Managers]
+        direction TB
         SON["Sonarr<br>Television Manager"]
         RAD["Radarr<br>Movie Manager"]
     end
 
-    TL[(Television Library)]
-    ML[(Movie Library)]
+    subgraph libraries[Libraries]
+        direction TB
+        TL[(Television Library)]
+        ML[(Movie Library)]
+    end
 
     subgraph servers[Media Servers]
+        direction TB
         JF["Jellyfin<br>Media Server"]
         PL["Plex<br>Media Server"]
     end
@@ -60,12 +66,12 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
-    JF -->|/jellyfin| NGX
-    PL -->|/plex| NGX
-    SON -->|/sonarr| NGX
-    RAD -->|/radarr| NGX
     SAB -->|/sabnzbd| NGX
     TRN -->|/transmission| NGX
+    SON -->|/sonarr| NGX
+    RAD -->|/radarr| NGX
+    JF -->|/jellyfin| NGX
+    PL -->|/plex| NGX
     NGX -->|port 80| CLIENT
 ```
 
