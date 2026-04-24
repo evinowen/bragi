@@ -280,6 +280,13 @@ display_service_urls() {
                     echo "  Radarr:   http://$host_ip:7878/radarr"
                 fi
                 ;;
+            "jellyfin")
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Jellyfin: http://$host_ip/jellyfin"
+                else
+                    echo "  Jellyfin: http://$host_ip:8096"
+                fi
+                ;;
             *)
                 echo "  $service_name: (check service documentation for port)"
                 ;;
