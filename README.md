@@ -11,7 +11,7 @@
                     Media Server
 ```
 
-Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles seven containerized services, and wires them together into a single coherent system managed by systemd.
+Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie, television, and music collection. It assembles eight containerized services, and wires them together into a single coherent system managed by systemd.
 
 ## How It Works
 
@@ -34,12 +34,14 @@ flowchart LR
             direction TB
             SON["Sonarr<br>Television Manager<br>/sonarr"]
             RAD["Radarr<br>Movie Manager<br>/radarr"]
+            LID["Lidarr<br>Music Manager<br>/lidarr"]
         end
 
         subgraph libraries[Libraries]
             direction TB
             TL[(Television Library)]
             ML[(Movie Library)]
+            MUL[(Music Library)]
         end
 
         subgraph servers[Media Servers]
@@ -56,14 +58,19 @@ flowchart LR
     BT_SRC -->|content downloads| TRN
     SAB -->|completed downloads| SON
     SAB -->|completed downloads| RAD
+    SAB -->|completed downloads| LID
     TRN -->|completed downloads| SON
     TRN -->|completed downloads| RAD
+    TRN -->|completed downloads| LID
     SON -->|sorts into| TL
     RAD -->|sorts into| ML
+    LID -->|sorts into| MUL
     TL -->|library reads| JF
     ML -->|library reads| JF
+    MUL -->|library reads| JF
     TL -->|library reads| PL
     ML -->|library reads| PL
+    MUL -->|library reads| PL
 
     pipeline --- NGX
     NGX -->|port 80| CLIENT
@@ -75,23 +82,25 @@ flowchart LR
 2. **Transmission** connects to the BitTorrent swarm and handles torrent downloads
 3. **Sonarr** tracks television series releases, sends download requests to SABnzbd and Transmission, and sorts completed downloads into your television library
 4. **Radarr** tracks movie releases, sends download requests to SABnzbd and Transmission, and sorts completed downloads into your movie library
-5. **Jellyfin** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
-6. **Plex** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
-7. **Nginx** acts as a reverse proxy, exposing all other services at a single IP address on port 80
+5. **Lidarr** tracks music album releases, sends download requests to SABnzbd and Transmission, and sorts completed downloads into your music library
+6. **Jellyfin** reads your television, movie, and music libraries and presents them as a streaming server accessible from any browser, television app, or media player
+7. **Plex** reads your television, movie, and music libraries and presents them as a streaming server accessible from any browser, television app, or media player
+8. **Nginx** acts as a reverse proxy, exposing all other services at a single IP address on port 80
 
-All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, Transmission, and Jellyfin are fully wired together during installation.
+All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, Lidarr, SABnzbd, Transmission, and Jellyfin are fully wired together during installation.
 
 ## Services
 
-| Service      | Image                      | Proxy Path     | Port  |
-|--------------|----------------------------|----------------|-------|
-| Nginx        | `nginx`                    | `/`            | 80    |
-| SABnzbd      | `linuxserver/sabnzbd`      | `/sabnzbd`     | 8080  |
-| Transmission | `linuxserver/transmission` | `/transmission`| 9091  |
-| Sonarr       | `linuxserver/sonarr`       | `/sonarr`      | 8989  |
-| Radarr       | `linuxserver/radarr`       | `/radarr`      | 7878  |
-| Jellyfin     | `jellyfin/jellyfin`        | `/jellyfin`    | 8096  |
-| Plex         | `plexinc/pms-docker`       | `/plex`        | 32400 |
+| Service      | Image                      | Proxy Path      | Port  |
+|--------------|----------------------------|-----------------|-------|
+| Nginx        | `nginx`                    | `/`             | 80    |
+| SABnzbd      | `linuxserver/sabnzbd`      | `/sabnzbd`      | 8080  |
+| Transmission | `linuxserver/transmission` | `/transmission` | 9091  |
+| Sonarr       | `linuxserver/sonarr`       | `/sonarr`       | 8989  |
+| Radarr       | `linuxserver/radarr`       | `/radarr`       | 7878  |
+| Lidarr       | `linuxserver/lidarr`       | `/lidarr`       | 8686  |
+| Jellyfin     | `jellyfin/jellyfin`        | `/jellyfin`     | 8096  |
+| Plex         | `plexinc/pms-docker`       | `/plex`         | 32400 |
 
 Each service runs as a Docker container and is registered as a systemd unit (`bragi.<name>`). Configuration is stored in `/opt/<name>/config/` and persists across container restarts and upgrades.
 
@@ -125,7 +134,7 @@ The installer will ask a few questions, then handle everything else automaticall
 
 ### What the Installer Asks
 
-**Media directories** — six paths for television and movie storage:
+**Media directories** — nine paths for television, movie, and music storage:
 
 | Prompt               | Purpose                                        |
 |----------------------|------------------------------------------------|
@@ -135,6 +144,9 @@ The installer will ask a few questions, then handle everything else automaticall
 | Movie downloads      | Where SABnzbd places movie downloads           |
 | Movie staging        | Radarr's temporary processing area             |
 | Movie library        | Radarr's sorted library (Jellyfin reads this)  |
+| Music downloads      | Where SABnzbd places music downloads           |
+| Music staging        | Lidarr's temporary processing area             |
+| Music library        | Lidarr's sorted library (Jellyfin reads this)  |
 
 If any of these directories do not exist, the installer will offer to create them.
 
@@ -146,12 +158,12 @@ If any of these directories do not exist, the installer will offer to create the
 
 Once you've answered the prompts, the installer:
 
-1. Pulls all seven Docker images
+1. Pulls all eight Docker images
 2. Creates each container with the correct volume mounts, environment variables, and network configuration
 3. Registers each container as a systemd service and enables it to start on boot
 4. Starts all services and waits for them to become healthy
-5. Configures Sonarr and Radarr: admin authentication, SABnzbd download client, root folders, remote path mappings, and Usenet indexers
-6. Configures Jellyfin: admin user, Television and Movies media libraries, and base URL for the Nginx proxy
+5. Configures Sonarr, Radarr, and Lidarr: admin authentication, SABnzbd download client, root folders, remote path mappings, and Usenet indexers
+6. Configures Jellyfin: admin user, Television, Movies, and Music media libraries, and base URL for the Nginx proxy
 7. Prints all service URLs and generated admin credentials
 
 ## Managing Services
@@ -172,7 +184,7 @@ sudo systemctl enable  bragi.jellyfin
 sudo systemctl disable bragi.jellyfin
 ```
 
-Available names: `nginx`, `sabnzbd`, `transmission`, `sonarr`, `radarr`, `jellyfin`, `plex`
+Available names: `nginx`, `sabnzbd`, `transmission`, `sonarr`, `radarr`, `lidarr`, `jellyfin`, `plex`
 
 To view logs:
 
@@ -268,6 +280,7 @@ Each entry configures a Newznab-compatible indexer in Sonarr, Radarr, or both:
 | `api_key`          | yes      | API key; use `""` for indexers that don't require one         |
 | `television`       | yes      | `true` to add this indexer to Sonarr                          |
 | `movies`           | yes      | `true` to add this indexer to Radarr                          |
+| `music`            | yes      | `true` to add this indexer to Lidarr                          |
 | `api_path`         | no       | API endpoint path (default: `/api`)                           |
 | `categories`       | no       | Newznab category IDs to search; overrides the service default |
 | `anime_categories` | no       | Anime-specific category IDs for Sonarr (default: `[]`)        |
@@ -275,21 +288,22 @@ Each entry configures a Newznab-compatible indexer in Sonarr, Radarr, or both:
 **Default categories** when `categories` is not specified:
 - Sonarr: `[5030, 5040]` (TV/SD, TV/HD)
 - Radarr: `[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]` (all Movies subcategories)
+- Lidarr: `[3000, 3010, 3020, 3030, 3040, 3050, 3060]` (all Audio subcategories)
 
 #### Newznab Category Reference
 
-| ID   | Category       | ID   | Category       |
-|------|----------------|------|----------------|
-| 2000 | Movies         | 5000 | TV             |
-| 2010 | Movies/Foreign | 5010 | TV/WEB-DL      |
-| 2020 | Movies/Other   | 5020 | TV/Foreign     |
-| 2030 | Movies/SD      | 5030 | TV/SD          |
-| 2040 | Movies/HD      | 5040 | TV/HD          |
-| 2045 | Movies/UHD     | 5045 | TV/UHD         |
-| 2050 | Movies/BluRay  | 5050 | TV/Other       |
-| 2060 | Movies/3D      | 5060 | TV/Sport       |
-|      |                | 5070 | TV/Anime       |
-|      |                | 5080 | TV/Documentary |
+| ID   | Category       | ID   | Category       | ID   | Category         |
+|------|----------------|------|----------------|------|------------------|
+| 2000 | Movies         | 5000 | TV             | 3000 | Audio            |
+| 2010 | Movies/Foreign | 5010 | TV/WEB-DL      | 3010 | Audio/MP3        |
+| 2020 | Movies/Other   | 5020 | TV/Foreign     | 3020 | Audio/Video      |
+| 2030 | Movies/SD      | 5030 | TV/SD          | 3030 | Audio/Audiobook  |
+| 2040 | Movies/HD      | 5040 | TV/HD          | 3040 | Audio/Lossless   |
+| 2045 | Movies/UHD     | 5045 | TV/UHD         | 3050 | Audio/Other      |
+| 2050 | Movies/BluRay  | 5050 | TV/Other       | 3060 | Audio/Foreign    |
+| 2060 | Movies/3D      | 5060 | TV/Sport       |      |                  |
+|      |                | 5070 | TV/Anime       |      |                  |
+|      |                | 5080 | TV/Documentary |      |                  |
 
 ### Running the Deploy Script
 

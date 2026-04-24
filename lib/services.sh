@@ -96,6 +96,7 @@ install_services() {
             if [[ -f "$install_script" ]]; then
                 export TELEVISION_DOWNLOADS_DIR TELEVISION_STAGING_DIR TELEVISION_LIBRARY_DIR
                 export MOVIE_DOWNLOADS_DIR MOVIE_STAGING_DIR MOVIE_LIBRARY_DIR
+                export MUSIC_DOWNLOADS_DIR MUSIC_STAGING_DIR MUSIC_LIBRARY_DIR
 
                 echo "Running installation script for $service_name..."
 
@@ -373,9 +374,16 @@ display_service_urls() {
                 ;;
             "radarr")
                 if [[ "$has_nginx" == "true" ]]; then
-                    echo "  Radarr:   http://$host_ip/radarr"
+                    echo "  Radarr:       http://$host_ip/radarr"
                 else
-                    echo "  Radarr:   http://$host_ip:7878/radarr"
+                    echo "  Radarr:       http://$host_ip:7878/radarr"
+                fi
+                ;;
+            "lidarr")
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Lidarr:       http://$host_ip/lidarr"
+                else
+                    echo "  Lidarr:       http://$host_ip:8686/lidarr"
                 fi
                 ;;
             "jellyfin")

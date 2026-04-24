@@ -49,6 +49,16 @@ configure_media_directories() {
         MOVIE_STAGING_DIR="$movies_base/stage"
         MOVIE_LIBRARY_DIR="$movies_base/library"
 
+        echo
+
+        echo "Music:"
+        echo -n "  Base directory [/media/music]: "
+        read music_base </dev/tty
+        music_base="${music_base:-/media/music}"
+        MUSIC_DOWNLOADS_DIR="$music_base/download"
+        MUSIC_STAGING_DIR="$music_base/stage"
+        MUSIC_LIBRARY_DIR="$music_base/library"
+
     else
         echo "Individual Configuration Mode"
         echo "Specify each directory separately."
@@ -81,6 +91,21 @@ configure_media_directories() {
         echo -n "  Library directory [/media/movies/library]: "
         read MOVIE_LIBRARY_DIR </dev/tty
         MOVIE_LIBRARY_DIR="${MOVIE_LIBRARY_DIR:-/media/movies/library}"
+
+        echo
+
+        echo "Music:"
+        echo -n "  Download directory [/media/music/download]: "
+        read MUSIC_DOWNLOADS_DIR </dev/tty
+        MUSIC_DOWNLOADS_DIR="${MUSIC_DOWNLOADS_DIR:-/media/music/download}"
+
+        echo -n "  Stage directory [/media/music/stage]: "
+        read MUSIC_STAGING_DIR </dev/tty
+        MUSIC_STAGING_DIR="${MUSIC_STAGING_DIR:-/media/music/stage}"
+
+        echo -n "  Library directory [/media/music/library]: "
+        read MUSIC_LIBRARY_DIR </dev/tty
+        MUSIC_LIBRARY_DIR="${MUSIC_LIBRARY_DIR:-/media/music/library}"
     fi
 
     echo
@@ -93,6 +118,10 @@ configure_media_directories() {
     echo "  Download:  $MOVIE_DOWNLOADS_DIR"
     echo "  Stage:     $MOVIE_STAGING_DIR"
     echo "  Library:   $MOVIE_LIBRARY_DIR"
+    echo "Music:"
+    echo "  Download:  $MUSIC_DOWNLOADS_DIR"
+    echo "  Stage:     $MUSIC_STAGING_DIR"
+    echo "  Library:   $MUSIC_LIBRARY_DIR"
 }
 
 create_media_directories() {
@@ -106,6 +135,9 @@ create_media_directories() {
         "$MOVIE_DOWNLOADS_DIR"
         "$MOVIE_STAGING_DIR"
         "$MOVIE_LIBRARY_DIR"
+        "$MUSIC_DOWNLOADS_DIR"
+        "$MUSIC_STAGING_DIR"
+        "$MUSIC_LIBRARY_DIR"
     )
 
     local -a missing_dirs=()

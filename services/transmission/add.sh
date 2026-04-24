@@ -17,10 +17,11 @@ WATCH_DIR="$DATA_DIR/watch"
 
 TELEVISION_DOWNLOADS="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/downloads/television}"
 MOVIE_DOWNLOADS="${MOVIE_DOWNLOADS_DIR:-$DATA_DIR/downloads/movies}"
+MUSIC_DOWNLOADS="${MUSIC_DOWNLOADS_DIR:-$DATA_DIR/downloads/music}"
 
 create_directories() {
     echo "Creating directories..."
-    sudo mkdir -p "$CONFIG_DIR" "$WATCH_DIR" "$TELEVISION_DOWNLOADS" "$MOVIE_DOWNLOADS"
+    sudo mkdir -p "$CONFIG_DIR" "$WATCH_DIR" "$TELEVISION_DOWNLOADS" "$MOVIE_DOWNLOADS" "$MUSIC_DOWNLOADS"
     sudo chown -R "$PUID:$PGID" "$DATA_DIR"
     echo "✓ Directories created"
 }
@@ -59,6 +60,7 @@ create_container() {
         -v "$CONFIG_DIR:/config" \
         -v "$TELEVISION_DOWNLOADS:/downloads/television" \
         -v "$MOVIE_DOWNLOADS:/downloads/movies" \
+        -v "$MUSIC_DOWNLOADS:/downloads/music" \
         -v "$WATCH_DIR:/watch" \
         "$IMAGE"
     echo "✓ Container created"

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+  <LogLevel>info</LogLevel>
+  <UpdateMechanism>Docker</UpdateMechanism>
+  <Branch>master</Branch>
+  <AutoUpdate>False</AutoUpdate>
+  <EnableSsl>False</EnableSsl>
+  <SslPort>9898</SslPort>
+  <UrlBase>/lidarr</UrlBase>
+  <BindAddress>*</BindAddress>
+  <Port>8686</Port>
+  <LaunchBrowser>False</LaunchBrowser>
+  <AuthenticationMethod>None</AuthenticationMethod>
+  <AuthenticationRequired>Enabled</AuthenticationRequired>
+  <Username></Username>
+  <Password></Password>
+  <PasswordConfirmation></PasswordConfirmation>
+  <ApiKey></ApiKey>
+  <AnalyticsEnabled>False</AnalyticsEnabled>
+  <InstanceName>Lidarr</InstanceName>
+</Config>

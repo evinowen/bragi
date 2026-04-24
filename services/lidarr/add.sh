@@ -2,28 +2,56 @@
 
 set -euo pipefail
 
-SERVICE_NAME="bragi.jellyfin"
-CONTAINER_NAME="bragi.jellyfin"
-IMAGE="jellyfin/jellyfin:latest"
+SERVICE_NAME="bragi.lidarr"
+CONTAINER_NAME="bragi.lidarr"
+IMAGE="linuxserver/lidarr:latest"
 SERVICE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" &> /dev/null && pwd)"
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
 TZ=${TZ:-"UTC"}
 
-DATA_DIR="/opt/jellyfin"
+DATA_DIR="/opt/lidarr"
 CONFIG_DIR="$DATA_DIR/config"
-CACHE_DIR="$DATA_DIR/cache"
 
-TELEVISION_DIR="${TELEVISION_LIBRARY_DIR:-$DATA_DIR/television}"
-MOVIE_DIR="${MOVIE_LIBRARY_DIR:-$DATA_DIR/movies}"
+DOWNLOADS_DIR="${MUSIC_DOWNLOADS_DIR:-$DATA_DIR/download}"
+STAGING_DIR="${MUSIC_STAGING_DIR:-$DATA_DIR/stage}"
 MUSIC_DIR="${MUSIC_LIBRARY_DIR:-$DATA_DIR/music}"
 
 create_directories() {
     echo "Creating directories..."
-    sudo mkdir -p "$CONFIG_DIR" "$CACHE_DIR"
+    sudo mkdir -p "$CONFIG_DIR" "$DOWNLOADS_DIR" "$STAGING_DIR" "$MUSIC_DIR"
     sudo chown -R "$PUID:$PGID" "$DATA_DIR"
+    if [[ "$DOWNLOADS_DIR" != "$DATA_DIR/download" ]]; then
+        sudo chown -R "$PUID:$PGID" "$DOWNLOADS_DIR"
+    fi
+    if [[ "$STAGING_DIR" != "$DATA_DIR/stage" ]]; then
+        sudo chown -R "$PUID:$PGID" "$STAGING_DIR"
+    fi
+    if [[ "$MUSIC_DIR" != "$DATA_DIR/music" ]]; then
+        sudo chown -R "$PUID:$PGID" "$MUSIC_DIR"
+    fi
     echo "✓ Directories created"
+}
+
+copy_configuration_files() {
+    echo "Copying default configuration files..."
+
+    if [[ ! -f "$CONFIG_DIR/config.xml" && -f "$SERVICE_DIR/config.xml" ]]; then
+        sudo cp "$SERVICE_DIR/config.xml" "$CONFIG_DIR/config.xml"
+        sudo chown "$PUID:$PGID" "$CONFIG_DIR/config.xml"
+        echo "✓ Copied default config.xml"
+    else
+        echo "- Configuration file already exists or template not found"
+    fi
+}
+
+generate_api_key() {
+    local api_key
+    api_key=$(openssl rand -hex 16)
+    sudo sed -i "s|<ApiKey>.*</ApiKey>|<ApiKey>${api_key}</ApiKey>|" "$CONFIG_DIR/config.xml"
+    sudo chown "$PUID:$PGID" "$CONFIG_DIR/config.xml"
+    echo "✓ API key generated"
 }
 
 pull_image() {
@@ -45,17 +73,17 @@ create_container() {
     echo "Creating Docker container..."
     docker create \
         --name="$CONTAINER_NAME" \
-        --hostname="jellyfin.bragi" \
+        --hostname="lidarr.bragi" \
         --network="bragi" \
         --restart=unless-stopped \
-        --user "$PUID:$PGID" \
+        -e PUID="$PUID" \
+        -e PGID="$PGID" \
         -e TZ="$TZ" \
-        -p 8096:8096 \
+        -p 8686:8686 \
         -v "$CONFIG_DIR:/config" \
-        -v "$CACHE_DIR:/cache" \
-        -v "$TELEVISION_DIR:/media/television:ro" \
-        -v "$MOVIE_DIR:/media/movies:ro" \
-        -v "$MUSIC_DIR:/media/music:ro" \
+        -v "$DOWNLOADS_DIR:/downloads" \
+        -v "$STAGING_DIR:/staging" \
+        -v "$MUSIC_DIR:/music" \
         "$IMAGE"
     echo "✓ Container created"
 }
@@ -67,7 +95,7 @@ create_systemd_service() {
 
     sudo tee "$service_file" > /dev/null << EOF
 [Unit]
-Description=Bragi Jellyfin Docker Container
+Description=Bragi Lidarr Docker Container
 After=docker.service
 Requires=docker.service
 
@@ -109,24 +137,26 @@ get_host_ip() {
 }
 
 main() {
-    echo "Installing Jellyfin service..."
+    echo "Installing Lidarr service..."
     echo "Container: $CONTAINER_NAME"
     echo "Image: $IMAGE"
-    echo "Config directory: $CONFIG_DIR"
-    echo "Cache directory: $CACHE_DIR"
-    echo "Television library: $TELEVISION_DIR (read-only)"
-    echo "Movie library: $MOVIE_DIR (read-only)"
-    echo "Music library: $MUSIC_DIR (read-only)"
+    echo "Data directory: $DATA_DIR"
+    echo "Downloads: $DOWNLOADS_DIR"
+    echo "Staging: $STAGING_DIR"
+    echo "Music library: $MUSIC_DIR"
+    echo "Web interface: http://localhost:8686/lidarr"
     echo
 
     create_directories
+    copy_configuration_files
+    generate_api_key
     pull_image
     stop_existing_container
     create_container
     create_systemd_service
 
     echo
-    echo "✓ Jellyfin service installed successfully!"
+    echo "✓ Lidarr service installed successfully!"
     echo
     echo "To start the service:"
     echo "  sudo systemctl start $SERVICE_NAME"
@@ -136,8 +166,8 @@ main() {
     echo
     local host_ip=$(get_host_ip)
     echo "Web interface URLs:"
-    echo "  http://localhost/jellyfin (from this machine)"
-    echo "  http://$host_ip/jellyfin (from network)"
+    echo "  http://localhost:8686/lidarr (from this machine)"
+    echo "  http://$host_ip:8686/lidarr (from network)"
 }
 
 if [[ "${BASH_SOURCE[0]:-$0}" == "${0}" ]]; then

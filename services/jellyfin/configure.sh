@@ -133,6 +133,7 @@ try:
     for name, collection_type, path in [
         ('Television', 'tvshows', '/media/television'),
         ('Movies', 'movies', '/media/movies'),
+        ('Music', 'music', '/media/music'),
     ]:
         if name in existing_names:
             print('- Library already exists: ' + name)

@@ -5,6 +5,7 @@ export interface Indexer {
   api_path?: string
   television?: boolean
   movies?: boolean
+  music?: boolean
   categories?: number[]
   anime_categories?: number[]
 }

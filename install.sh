@@ -14,6 +14,9 @@ TELEVISION_LIBRARY_DIR=""
 MOVIE_DOWNLOADS_DIR=""
 MOVIE_STAGING_DIR=""
 MOVIE_LIBRARY_DIR=""
+MUSIC_DOWNLOADS_DIR=""
+MUSIC_STAGING_DIR=""
+MUSIC_LIBRARY_DIR=""
 
 USENET_HOST=""
 USENET_USERNAME=""
@@ -89,6 +92,10 @@ main() {
     echo "  Download:  $MOVIE_DOWNLOADS_DIR"
     echo "  Stage:     $MOVIE_STAGING_DIR"
     echo "  Library:   $MOVIE_LIBRARY_DIR"
+    echo "Music:"
+    echo "  Download:  $MUSIC_DOWNLOADS_DIR"
+    echo "  Stage:     $MUSIC_STAGING_DIR"
+    echo "  Library:   $MUSIC_LIBRARY_DIR"
 
     display_credentials
     display_service_urls

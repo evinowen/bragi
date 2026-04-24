@@ -42,6 +42,7 @@ try:
     for title, lib_type, agent, scanner, path in [
         ('Television', 'show', 'tv.plex.agents.series', 'Plex TV Series', '/media/television'),
         ('Movies', 'movie', 'tv.plex.agents.movie', 'Plex Movie', '/media/movies'),
+        ('Music', 'artist', 'tv.plex.agents.music', 'Plex Music', '/media/music'),
     ]:
         if title in existing:
             print('- Library already exists: ' + title)

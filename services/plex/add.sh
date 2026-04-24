@@ -17,6 +17,7 @@ TRANSCODE_DIR="$DATA_DIR/transcode"
 
 TELEVISION_DIR="${TELEVISION_LIBRARY_DIR:-$DATA_DIR/television}"
 MOVIE_DIR="${MOVIE_LIBRARY_DIR:-$DATA_DIR/movies}"
+MUSIC_DIR="${MUSIC_LIBRARY_DIR:-$DATA_DIR/music}"
 
 create_directories() {
     echo "Creating directories..."
@@ -56,6 +57,7 @@ create_container() {
         -v "$TRANSCODE_DIR:/transcode" \
         -v "$TELEVISION_DIR:/media/television:ro" \
         -v "$MOVIE_DIR:/media/movies:ro" \
+        -v "$MUSIC_DIR:/media/music:ro" \
         "$IMAGE"
     echo "✓ Container created"
 }
@@ -116,6 +118,7 @@ main() {
     echo "Transcode directory: $TRANSCODE_DIR"
     echo "Television library: $TELEVISION_DIR (read-only)"
     echo "Movie library: $MOVIE_DIR (read-only)"
+    echo "Music library: $MUSIC_DIR (read-only)"
     echo
 
     create_directories

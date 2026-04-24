@@ -72,7 +72,10 @@ for dir in \
     /media/television/library \
     /media/movies/download \
     /media/movies/stage \
-    /media/movies/library
+    /media/movies/library \
+    /media/music/download \
+    /media/music/stage \
+    /media/music/library
 do
     check "Media directory exists: $dir" test -d "$dir"
 done
@@ -104,6 +107,12 @@ for svc in "${ENABLED_SERVICES[@]}"; do
             check_http "HTTP 200: Radarr"           "http://localhost:7878/radarr"
             if [[ "$nginx_enabled" == "true" ]]; then
                 check_http "HTTP 200: Nginx -> Radarr"   "http://localhost/radarr"
+            fi
+            ;;
+        lidarr)
+            check_http "HTTP 200: Lidarr"           "http://localhost:8686/lidarr"
+            if [[ "$nginx_enabled" == "true" ]]; then
+                check_http "HTTP 200: Nginx -> Lidarr"   "http://localhost/lidarr"
             fi
             ;;
         jellyfin)

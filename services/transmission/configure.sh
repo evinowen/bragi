@@ -10,6 +10,8 @@ SONARR_API_KEY=$(grep -oP '<ApiKey>\K[^<]+' /opt/sonarr/config/config.xml 2>/dev
 SONARR_BASE_URL="http://localhost:8989/sonarr/api/v3"
 RADARR_API_KEY=$(grep -oP '<ApiKey>\K[^<]+' /opt/radarr/config/config.xml 2>/dev/null || true)
 RADARR_BASE_URL="http://localhost:7878/radarr/api/v3"
+LIDARR_API_KEY=$(grep -oP '<ApiKey>\K[^<]+' /opt/lidarr/config/config.xml 2>/dev/null || true)
+LIDARR_BASE_URL="http://localhost:8686/lidarr/api/v1"
 
 TRANSMISSION_USER="${ADMIN_USERNAME:-}"
 TRANSMISSION_PASS="${ADMIN_PASSWORD:-}"
@@ -227,6 +229,85 @@ configure_radarr_remote_path_mapping() {
     fi
 }
 
+configure_lidarr_download_client() {
+    if ! is_service_enabled lidarr; then
+        echo "- Lidarr is disabled — skipping Lidarr download client configuration"
+        return 0
+    fi
+
+    if [[ -z "$LIDARR_API_KEY" ]]; then
+        echo "- Lidarr API key not found — skipping Lidarr download client configuration"
+        return 0
+    fi
+
+    echo "Configuring Transmission as download client in Lidarr..."
+    local payload
+    payload=$(printf '{
+  "enable": true,
+  "protocol": "torrent",
+  "priority": 1,
+  "removeCompletedDownloads": true,
+  "removeFailedDownloads": true,
+  "name": "Transmission",
+  "fields": [
+    {"name": "host",                  "value": "%s"},
+    {"name": "port",                  "value": %d},
+    {"name": "urlBase",               "value": "%s"},
+    {"name": "username",              "value": "%s"},
+    {"name": "password",              "value": "%s"},
+    {"name": "musicDirectory",        "value": ""},
+    {"name": "musicCategory",         "value": "music"},
+    {"name": "musicImportedCategory", "value": ""},
+    {"name": "recentTvPriority",      "value": 0},
+    {"name": "olderTvPriority",       "value": 0},
+    {"name": "addPaused",             "value": false},
+    {"name": "useSsl",                "value": false}
+  ],
+  "implementationName": "Transmission",
+  "implementation": "Transmission",
+  "configContract": "TransmissionSettings",
+  "tags": []
+}' "$TRANSMISSION_HOST" "$TRANSMISSION_PORT" "$TRANSMISSION_URL_BASE" \
+   "$TRANSMISSION_USER" "$TRANSMISSION_PASS")
+
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "${LIDARR_BASE_URL}/downloadclient" \
+        -H "X-Api-Key: ${LIDARR_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "$payload")
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ Transmission configured as download client in Lidarr"
+    else
+        echo "⚠️  Failed to configure Transmission download client in Lidarr (HTTP $status)"
+    fi
+}
+
+configure_lidarr_remote_path_mapping() {
+    if ! is_service_enabled lidarr; then
+        return 0
+    fi
+
+    if [[ -z "$LIDARR_API_KEY" ]]; then
+        return 0
+    fi
+
+    echo "Configuring Lidarr remote path mapping for Transmission..."
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        "${LIDARR_BASE_URL}/remotepathmapping" \
+        -H "X-Api-Key: ${LIDARR_API_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{\"host\": \"${TRANSMISSION_HOST}\", \"remotePath\": \"/downloads/music\", \"localPath\": \"/downloads\"}")
+
+    if [[ "$status" =~ ^2 ]]; then
+        echo "✓ Lidarr remote path mapping configured for Transmission"
+    else
+        echo "⚠️  Failed to configure Lidarr remote path mapping for Transmission (HTTP $status)"
+    fi
+}
+
 main() {
     echo "Waiting for Transmission..."
     if ! wait_for_transmission; then
@@ -240,6 +321,8 @@ main() {
     configure_sonarr_remote_path_mapping
     configure_radarr_download_client
     configure_radarr_remote_path_mapping
+    configure_lidarr_download_client
+    configure_lidarr_remote_path_mapping
 }
 
 main "$@"

@@ -62,6 +62,10 @@ expect {
         send "\r"
         exp_continue
     }
+    -re {Base directory \[/media/music\]:} {
+        send "\r"
+        exp_continue
+    }
     -re {Would you like to create these directories\? \[y/N\]:} {
         send "y\r"
         exp_continue

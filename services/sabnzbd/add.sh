@@ -19,11 +19,12 @@ CONFIG_DIR="$DATA_DIR/config"
 GENERAL_DOWNLOADS_DIR="$DATA_DIR/download"
 TELEVISION_DOWNLOADS="${TELEVISION_DOWNLOADS_DIR:-$DATA_DIR/download}"
 MOVIE_DOWNLOADS="${MOVIE_DOWNLOADS_DIR:-$DATA_DIR/movie-download}"
+MUSIC_DOWNLOADS="${MUSIC_DOWNLOADS_DIR:-$DATA_DIR/music-download}"
 INCOMPLETE_DIR="$DATA_DIR/incomplete"
 
 create_directories() {
     echo "Creating directories..."
-    sudo mkdir -p "$CONFIG_DIR" "$GENERAL_DOWNLOADS_DIR" "$TELEVISION_DOWNLOADS" "$MOVIE_DOWNLOADS" "$INCOMPLETE_DIR"
+    sudo mkdir -p "$CONFIG_DIR" "$GENERAL_DOWNLOADS_DIR" "$TELEVISION_DOWNLOADS" "$MOVIE_DOWNLOADS" "$MUSIC_DOWNLOADS" "$INCOMPLETE_DIR"
     sudo chown -R "$PUID:$PGID" "$DATA_DIR"
     echo "✓ Directories created"
 }
@@ -99,6 +100,7 @@ configure_category_dirs() {
     echo "Configuring category download directories..."
     sudo sed -i '/^\[\[television\]\]/,/^\[\[/ s|^dir =.*|dir = /downloads/television|' "$CONFIG_DIR/sabnzbd.ini"
     sudo sed -i '/^\[\[movies\]\]/,/^\[\[/ s|^dir =.*|dir = /downloads/movies|' "$CONFIG_DIR/sabnzbd.ini"
+    sudo sed -i '/^\[\[music\]\]/,/^\[\[/ s|^dir =.*|dir = /downloads/music|' "$CONFIG_DIR/sabnzbd.ini"
     sudo chown "$PUID:$PGID" "$CONFIG_DIR/sabnzbd.ini"
     echo "✓ Category directories configured"
 }
@@ -144,6 +146,7 @@ create_container() {
         -v "$GENERAL_DOWNLOADS_DIR:/downloads" \
         -v "$TELEVISION_DOWNLOADS:/downloads/television" \
         -v "$MOVIE_DOWNLOADS:/downloads/movies" \
+        -v "$MUSIC_DOWNLOADS:/downloads/music" \
         -v "$INCOMPLETE_DIR:/incomplete-downloads" \
         "$IMAGE"
     echo "✓ Container created"
