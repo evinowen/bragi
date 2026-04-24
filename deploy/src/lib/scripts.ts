@@ -14,7 +14,7 @@ function writeScript(filePath: string, content: string): void {
 export function writeScripts(): void {
   writeScript(path.join(work.dir, 'setup.sh'), readScript('setup.sh'))
 
-  const allServices = ['nginx', 'sabnzbd', 'sonarr', 'radarr', 'jellyfin']
+  const allServices = ['nginx', 'sabnzbd', 'sonarr', 'radarr', 'jellyfin', 'plex']
   const enabledServices = allServices.filter(svc => config.services[svc])
   const disabledServices = allServices.filter(svc => !config.services[svc])
   const enabledServicesStr = enabledServices.join(' ')

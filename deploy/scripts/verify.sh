@@ -106,5 +106,11 @@ for svc in "${ENABLED_SERVICES[@]}"; do
                 check_http "HTTP 200: Nginx -> Jellyfin" "http://localhost/jellyfin/health"
             fi
             ;;
+        plex)
+            check_http "HTTP 200: Plex"             "http://localhost:32400/identity"
+            if [[ "$nginx_enabled" == "true" ]]; then
+                check_http "HTTP 200: Nginx -> Plex"     "http://localhost/plex/identity"
+            fi
+            ;;
     esac
 done

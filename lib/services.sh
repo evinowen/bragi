@@ -366,6 +366,13 @@ display_service_urls() {
                     echo "  Jellyfin: http://$host_ip:8096"
                 fi
                 ;;
+            "plex")
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Plex:     http://$host_ip/plex/web"
+                else
+                    echo "  Plex:     http://$host_ip:32400/web"
+                fi
+                ;;
             *)
                 echo "  $service_name: (check service documentation for port)"
                 ;;

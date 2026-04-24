@@ -55,13 +55,14 @@ All containers run on a shared Docker network (`bragi`) so they communicate by h
 
 ## Services
 
-| Service  | Image                   | Proxy Path  | Port |
-|----------|-------------------------|-------------|------|
-| Nginx    | `nginx`                 | `/`         | 80   |
-| SABnzbd  | `linuxserver/sabnzbd`   | `/sabnzbd`  | 8080 |
-| Sonarr   | `linuxserver/sonarr`    | `/sonarr`   | 8989 |
-| Radarr   | `linuxserver/radarr`    | `/radarr`   | 7878 |
-| Jellyfin | `jellyfin/jellyfin`     | `/jellyfin` | 8096 |
+| Service  | Image                   | Proxy Path  | Port  |
+|----------|-------------------------|-------------|-------|
+| Nginx    | `nginx`                 | `/`         | 80    |
+| SABnzbd  | `linuxserver/sabnzbd`   | `/sabnzbd`  | 8080  |
+| Sonarr   | `linuxserver/sonarr`    | `/sonarr`   | 8989  |
+| Radarr   | `linuxserver/radarr`    | `/radarr`   | 7878  |
+| Jellyfin | `jellyfin/jellyfin`     | `/jellyfin` | 8096  |
+| Plex     | `plexinc/pms-docker`    | `/plex`     | 32400 |
 
 Each service runs as a Docker container and is registered as a systemd unit (`bragi.<name>`). Configuration is stored in `/opt/<name>/config/` and persists across container restarts and upgrades.
 
