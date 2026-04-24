@@ -18,29 +18,34 @@ Named for the Norse god of poetry and music — the skald of Valhalla, who playe
 Bragi's services form a pipeline from download to playback:
 
 ```mermaid
-flowchart TD
-    UP([Usenet Provider])
-    SAB["SABnzbd<br>Download Manager"]
-    SON["Sonarr<br>Television Manager"]
-    RAD["Radarr<br>Movie Manager"]
-    TL[(Television Library)]
-    ML[(Movie Library)]
-    JF["Jellyfin<br>Media Server"]
-    PL["Plex<br>Media Server"]
+flowchart RL
+    subgraph pipe[" "]
+        direction BT
+        UP([Usenet Provider])
+        SAB["SABnzbd<br>Download Manager"]
+        SON["Sonarr<br>Television Manager"]
+        RAD["Radarr<br>Movie Manager"]
+        TL[(Television Library)]
+        ML[(Movie Library)]
+        JF["Jellyfin<br>Media Server"]
+        PL["Plex<br>Media Server"]
+
+        UP -->|content downloads| SAB
+        SON -->|download requests| SAB
+        SAB -->|completed downloads| SON
+        RAD -->|download requests| SAB
+        SAB -->|completed downloads| RAD
+        SON -->|sorts into| TL
+        RAD -->|sorts into| ML
+        TL -->|library reads| JF
+        ML -->|library reads| JF
+        TL -->|library reads| PL
+        ML -->|library reads| PL
+    end
+
     NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
-    UP -->|content downloads| SAB
-    SON -->|download requests| SAB
-    SAB -->|completed downloads| SON
-    RAD -->|download requests| SAB
-    SAB -->|completed downloads| RAD
-    SON -->|sorts into| TL
-    RAD -->|sorts into| ML
-    TL -->|library reads| JF
-    ML -->|library reads| JF
-    TL -->|library reads| PL
-    ML -->|library reads| PL
     CLIENT -->|port 80| NGX
     NGX -->|/sabnzbd| SAB
     NGX -->|/sonarr| SON
