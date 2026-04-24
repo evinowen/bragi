@@ -25,14 +25,14 @@ flowchart LR
 
     subgraph downloaders[Download Clients]
         direction TB
-        SAB["SABnzbd<br>Usenet Downloader"]
-        TRN["Transmission<br>BitTorrent Downloader"]
+        SAB["SABnzbd<br>Usenet Downloader<br>/sabnzbd"]
+        TRN["Transmission<br>BitTorrent Downloader<br>/transmission"]
     end
 
     subgraph managers[Media Managers]
         direction TB
-        SON["Sonarr<br>Television Manager"]
-        RAD["Radarr<br>Movie Manager"]
+        SON["Sonarr<br>Television Manager<br>/sonarr"]
+        RAD["Radarr<br>Movie Manager<br>/radarr"]
     end
 
     subgraph libraries[Libraries]
@@ -43,8 +43,8 @@ flowchart LR
 
     subgraph servers[Media Servers]
         direction TB
-        JF["Jellyfin<br>Media Server"]
-        PL["Plex<br>Media Server"]
+        JF["Jellyfin<br>Media Server<br>/jellyfin"]
+        PL["Plex<br>Media Server<br>/plex"]
     end
 
     NGX["Nginx<br>Reverse Proxy"]
@@ -63,12 +63,6 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
-    SAB -->|/sabnzbd| NGX
-    TRN -->|/transmission| NGX
-    SON -->|/sonarr| NGX
-    RAD -->|/radarr| NGX
-    JF -->|/jellyfin| NGX
-    PL -->|/plex| NGX
     NGX -->|port 80| CLIENT
 ```
 
