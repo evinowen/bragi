@@ -47,7 +47,11 @@ flowchart LR
         PL["Plex<br>Media Server"]
     end
 
-    NGX["Nginx<br>Reverse Proxy"]
+    subgraph proxies[Proxies]
+        direction TB
+        NGX["Nginx<br>Reverse Proxy"]
+    end
+
     CLIENT([Web Browser or Media Player])
 
     UP -->|content downloads| SAB
