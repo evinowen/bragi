@@ -11,7 +11,7 @@
                     Media Server
 ```
 
-Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles five containerized services, preconfigured to talk to each other, and wires them together into a single coherent system managed by systemd.
+Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles five containerized services, and wires them together into a single coherent system managed by systemd.
 
 ## How It Works
 
@@ -55,13 +55,13 @@ All containers run on a shared Docker network (`bragi`) so they communicate by h
 
 ## Services
 
-| Service | Image | Proxy Path | Port |
-|---------|-------|------------|------|
-| Nginx | `nginx` | `/` | 80 |
-| SABnzbd | `linuxserver/sabnzbd` | `/sabnzbd` | 8080 |
-| Sonarr | `linuxserver/sonarr` | `/sonarr` | 8989 |
-| Radarr | `linuxserver/radarr` | `/radarr` | 7878 |
-| Jellyfin | `jellyfin/jellyfin` | `/jellyfin` | 8096 |
+| Service  | Image                   | Proxy Path  | Port |
+|----------|-------------------------|-------------|------|
+| Nginx    | `nginx`                 | `/`         | 80   |
+| SABnzbd  | `linuxserver/sabnzbd`   | `/sabnzbd`  | 8080 |
+| Sonarr   | `linuxserver/sonarr`    | `/sonarr`   | 8989 |
+| Radarr   | `linuxserver/radarr`    | `/radarr`   | 7878 |
+| Jellyfin | `jellyfin/jellyfin`     | `/jellyfin` | 8096 |
 
 Each service runs as a Docker container and is registered as a systemd unit (`bragi.<name>`). Configuration is stored in `/opt/<name>/config/` and persists across container restarts and upgrades.
 
@@ -97,14 +97,14 @@ The installer will ask a few questions, then handle everything else automaticall
 
 **Media directories** — six paths for television and movie storage:
 
-| Prompt | Purpose |
-|--------|---------|
-| Television downloads | Where SABnzbd places television downloads |
-| Television staging | Sonarr's temporary processing area |
-| Television library | Sonarr's sorted library (Jellyfin reads this) |
-| Movie downloads | Where SABnzbd places movie downloads |
-| Movie staging | Radarr's temporary processing area |
-| Movie library | Radarr's sorted library (Jellyfin reads this) |
+| Prompt               | Purpose                                        |
+|----------------------|------------------------------------------------|
+| Television downloads | Where SABnzbd places television downloads      |
+| Television staging   | Sonarr's temporary processing area             |
+| Television library   | Sonarr's sorted library (Jellyfin reads this)  |
+| Movie downloads      | Where SABnzbd places movie downloads           |
+| Movie staging        | Radarr's temporary processing area             |
+| Movie library        | Radarr's sorted library (Jellyfin reads this)  |
 
 If any of these directories do not exist, the installer will offer to create them.
 
@@ -200,43 +200,43 @@ See `deploy/deploy.json.example` for a complete example with all optional fields
 
 #### Top-level fields
 
-| Field | Description |
-|-------|-------------|
-| `gcp_project_id` | Google Cloud Platform project to create the test virtual machine in |
-| `gcp_zone` | Compute Engine zone (for example, `us-west1-a`) |
-| `gcp_machine_type` | Machine type (default: `e2-standard-2`) |
-| `setup_firewall` | Create firewall rules for SSH and HTTP on first run |
-| `skip_cleanup` | Set to `true` to leave the virtual machine running after the test (useful for debugging) |
+| Field              | Description                                                                              |
+|--------------------|------------------------------------------------------------------------------------------|
+| `gcp_project_id`   | Google Cloud Platform project to create the test virtual machine in                      |
+| `gcp_zone`         | Compute Engine zone (for example, `us-west1-a`)                                          |
+| `gcp_machine_type` | Machine type (default: `e2-standard-2`)                                                  |
+| `setup_firewall`   | Create firewall rules for SSH and HTTP on first run                                      |
+| `skip_cleanup`     | Set to `true` to leave the virtual machine running after the test (useful for debugging) |
 
 #### `usenet`
 
-| Field | Description |
-|-------|-------------|
-| `host` | Usenet provider hostname |
-| `username` | Account username |
-| `password` | Account password |
-| `ssl` | `true` to connect over SSL (recommended) |
+| Field      | Description                              |
+|------------|------------------------------------------|
+| `host`     | Usenet provider hostname                 |
+| `username` | Account username                         |
+| `password` | Account password                         |
+| `ssl`      | `true` to connect over SSL (recommended) |
 
 #### `sabnzbd`
 
-| Field | Description |
-|-------|-------------|
+| Field                | Description                                                                        |
+|----------------------|------------------------------------------------------------------------------------|
 | `max_download_speed` | Cap download speed (for example, `100M`, `1G`); omit or leave empty for unlimited |
 
 #### `indexers`
 
 Each entry configures a Newznab-compatible indexer in Sonarr, Radarr, or both:
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | yes | Display name for the indexer |
-| `url` | yes | Indexer base URL (for example, `https://api.nzbgeek.info`) |
-| `api_key` | yes | API key; use `""` for indexers that don't require one |
-| `television` | yes | `true` to add this indexer to Sonarr |
-| `movies` | yes | `true` to add this indexer to Radarr |
-| `api_path` | no | API endpoint path (default: `/api`) |
-| `categories` | no | Newznab category IDs to search; overrides the service default |
-| `anime_categories` | no | Anime-specific category IDs for Sonarr (default: `[]`) |
+| Field              | Required | Description                                                   |
+|--------------------|----------|---------------------------------------------------------------|
+| `name`             | yes      | Display name for the indexer                                  |
+| `url`              | yes      | Indexer base URL (for example, `https://api.nzbgeek.info`)    |
+| `api_key`          | yes      | API key; use `""` for indexers that don't require one         |
+| `television`       | yes      | `true` to add this indexer to Sonarr                          |
+| `movies`           | yes      | `true` to add this indexer to Radarr                          |
+| `api_path`         | no       | API endpoint path (default: `/api`)                           |
+| `categories`       | no       | Newznab category IDs to search; overrides the service default |
+| `anime_categories` | no       | Anime-specific category IDs for Sonarr (default: `[]`)        |
 
 **Default categories** when `categories` is not specified:
 - Sonarr: `[5030, 5040]` (TV/SD, TV/HD)
@@ -244,18 +244,18 @@ Each entry configures a Newznab-compatible indexer in Sonarr, Radarr, or both:
 
 #### Newznab Category Reference
 
-| ID | Category | ID | Category |
-|----|----------|----|----------|
-| 2000 | Movies | 5000 | TV |
-| 2010 | Movies/Foreign | 5010 | TV/WEB-DL |
-| 2020 | Movies/Other | 5020 | TV/Foreign |
-| 2030 | Movies/SD | 5030 | TV/SD |
-| 2040 | Movies/HD | 5040 | TV/HD |
-| 2045 | Movies/UHD | 5045 | TV/UHD |
-| 2050 | Movies/BluRay | 5050 | TV/Other |
-| 2060 | Movies/3D | 5060 | TV/Sport |
-| | | 5070 | TV/Anime |
-| | | 5080 | TV/Documentary |
+| ID   | Category       | ID   | Category       |
+|------|----------------|------|----------------|
+| 2000 | Movies         | 5000 | TV             |
+| 2010 | Movies/Foreign | 5010 | TV/WEB-DL      |
+| 2020 | Movies/Other   | 5020 | TV/Foreign     |
+| 2030 | Movies/SD      | 5030 | TV/SD          |
+| 2040 | Movies/HD      | 5040 | TV/HD          |
+| 2045 | Movies/UHD     | 5045 | TV/UHD         |
+| 2050 | Movies/BluRay  | 5050 | TV/Other       |
+| 2060 | Movies/3D      | 5060 | TV/Sport       |
+|      |                | 5070 | TV/Anime       |
+|      |                | 5080 | TV/Documentary |
 
 ### Running the Deploy Script
 
@@ -293,4 +293,3 @@ docker logs bragi.<name>
 **Jellyfin not accessible at `/jellyfin`**
 
 Jellyfin takes up to two minutes to fully initialize on first start. If the proxy returns a 404, wait a moment and reload. If the issue persists, check that `bragi.jellyfin` is active and that the base URL is set to `/jellyfin` in Jellyfin's network settings.
-
