@@ -67,12 +67,12 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
-    SAB -->|/sabnzbd| NGX
-    TRN -->|/transmission| NGX
-    SON -->|/sonarr| NGX
-    RAD -->|/radarr| NGX
-    JF -->|/jellyfin| NGX
-    PL -->|/plex| NGX
+    NGX -->|/sabnzbd| SAB
+    NGX -->|/transmission| TRN
+    NGX -->|/sonarr| SON
+    NGX -->|/radarr| RAD
+    NGX -->|/jellyfin| JF
+    NGX -->|/plex| PL
     NGX -->|port 80| CLIENT
 ```
 
