@@ -20,6 +20,9 @@ export default tseslint.config(
       },
     },
     rules: {
+      '@stylistic/padding-line-between-statements': ['error',
+        { blankLine: 'always', prev: 'block-like', next: '*' },
+      ],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       'unicorn/prefer-module': 'off',            // CommonJS project
       'unicorn/no-process-exit': 'off',          // intentional process.exit usage

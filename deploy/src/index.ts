@@ -29,6 +29,7 @@ function requireExecutable(name: string): string {
     console.error(`ERROR: '${name}' not found on PATH.`)
     process.exit(1)
   }
+
   return result.stdout.trim().split('\n')[0].trim()
 }
 
@@ -36,6 +37,7 @@ function spawnArgs(exe: string, args: string[]): [string, string[]] {
   if (process.platform === 'win32' && /\.(cmd|bat)$/i.test(exe)) {
     return ['cmd.exe', ['/c', exe, ...args]]
   }
+
   return [exe, args]
 }
 
@@ -142,6 +144,7 @@ function runOutput(cmd: string, args: string[]): string {
     console.error(result.stderr)
     process.exit(result.status ?? 1)
   }
+
   return (result.stdout).trim()
 }
 
@@ -244,6 +247,7 @@ function checkPrerequisites(): void {
     console.error('ERROR: gcp_project_id is not set in deploy.json.')
     process.exit(1)
   }
+
   log(`Project:      ${projectId}`)
   log(`Zone:         ${zone}`)
   log(`Machine type: ${machineType}`)
@@ -261,6 +265,7 @@ function ensureFirewallRule(name: string, ports: string): void {
     log(`Firewall rule '${name}' already exists, skipping`)
     return
   }
+
   log(`Creating firewall rule '${name}' (${ports})...`)
   run(GCLOUD, [
     'compute', 'firewall-rules', 'create', name,
