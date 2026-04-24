@@ -18,7 +18,7 @@ Named for the Norse god of poetry and music — the skald of Valhalla, who playe
 Bragi's services form a pipeline from download to playback:
 
 ```mermaid
-flowchart RL
+flowchart LR
     subgraph pipe[" "]
         direction BT
         UP([Usenet Provider])
@@ -46,12 +46,12 @@ flowchart RL
     NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
-    CLIENT -->|port 80| NGX
-    NGX -->|/sabnzbd| SAB
-    NGX -->|/sonarr| SON
-    NGX -->|/radarr| RAD
-    NGX -->|/jellyfin| JF
-    NGX -->|/plex| PL
+    JF -->|/jellyfin| NGX
+    PL -->|/plex| NGX
+    SON -->|/sonarr| NGX
+    RAD -->|/radarr| NGX
+    SAB -->|/sabnzbd| NGX
+    NGX -->|port 80| CLIENT
 ```
 
 1. **SABnzbd** connects to your Usenet provider and handles all downloads
