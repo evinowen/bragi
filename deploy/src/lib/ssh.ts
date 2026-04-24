@@ -13,8 +13,8 @@ export function sshRun(args: string[], opts: SpawnSyncOptions = {}): { status: n
     '-o', 'BatchMode=yes',
     `${SSH_USER}@${vm.ip}`,
   ]
-  const [resolvedCmd, resolvedArgs] = spawnArgs(SSH_EXE, [...base, ...args])
-  const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8', ...opts }) as SpawnSyncReturns<string>
+  const [resolvedCmd, resolvedArgs, resolvedOpts] = spawnArgs(SSH_EXE, [...base, ...args])
+  const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8', ...resolvedOpts, ...opts }) as SpawnSyncReturns<string>
 
   return {
     status: result.status ?? 1,

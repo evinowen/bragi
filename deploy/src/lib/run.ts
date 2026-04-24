@@ -2,8 +2,8 @@ import { spawnSync, SpawnSyncOptions, SpawnSyncReturns } from 'node:child_proces
 import { spawnArgs } from './executables'
 
 export function run(cmd: string, args: string[], opts: SpawnSyncOptions = {}): void {
-  const [resolvedCmd, resolvedArgs] = spawnArgs(cmd, args)
-  const result = spawnSync(resolvedCmd, resolvedArgs, { stdio: 'inherit', ...opts })
+  const [resolvedCmd, resolvedArgs, resolvedOpts] = spawnArgs(cmd, args)
+  const result = spawnSync(resolvedCmd, resolvedArgs, { stdio: 'inherit', ...resolvedOpts, ...opts })
 
   if (result.status !== 0) {
     process.exit(result.status ?? 1)
@@ -11,8 +11,8 @@ export function run(cmd: string, args: string[], opts: SpawnSyncOptions = {}): v
 }
 
 export function runOutput(cmd: string, args: string[]): string {
-  const [resolvedCmd, resolvedArgs] = spawnArgs(cmd, args)
-  const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8' })
+  const [resolvedCmd, resolvedArgs, resolvedOpts] = spawnArgs(cmd, args)
+  const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8', ...resolvedOpts }) as SpawnSyncReturns<string>
 
   if (result.status !== 0) {
     console.error(result.stderr)
@@ -23,8 +23,8 @@ export function runOutput(cmd: string, args: string[]): string {
 }
 
 export function runCapture(cmd: string, args: string[]): { status: number, stdout: string, stderr: string } {
-  const [resolvedCmd, resolvedArgs] = spawnArgs(cmd, args)
-  const result: SpawnSyncReturns<string> = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8' })
+  const [resolvedCmd, resolvedArgs, resolvedOpts] = spawnArgs(cmd, args)
+  const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8', ...resolvedOpts }) as SpawnSyncReturns<string>
 
   return {
     status: result.status ?? 1,
