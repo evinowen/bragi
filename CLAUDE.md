@@ -294,7 +294,11 @@ After services are successfully started and verified, the installer displays web
 3. Make executable: `chmod +x services/{service-name}/add.sh`
 4. Create service-specific `README.md`
 5. Test installation process
-6. Update main README.md to list the new service
+6. Update main README.md — this includes all of the following:
+   - Add the service to the Services table
+   - Update any prose that states a specific number of services (e.g. "five containerized services" → "six containerized services") to reflect the new count
+   - Update the installer step that names how many Docker images are pulled
+   - Add the service to any other relevant sections (for example, the "What the Installer Does" list if it is auto-configured)
 
 ### Modifying Existing Services
 

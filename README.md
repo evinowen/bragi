@@ -11,7 +11,7 @@
                     Media Server
 ```
 
-Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles five containerized services, and wires them together into a single coherent system managed by systemd.
+Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles six containerized services, and wires them together into a single coherent system managed by systemd.
 
 ## How It Works
 
@@ -117,7 +117,7 @@ If any of these directories do not exist, the installer will offer to create the
 
 Once you've answered the prompts, the installer:
 
-1. Pulls all five Docker images
+1. Pulls all six Docker images
 2. Creates each container with the correct volume mounts, environment variables, and network configuration
 3. Registers each container as a systemd service and enables it to start on boot
 4. Starts all services and waits for them to become healthy
