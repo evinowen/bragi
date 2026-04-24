@@ -47,11 +47,7 @@ flowchart LR
         PL["Plex<br>Media Server"]
     end
 
-    subgraph proxies[Proxies]
-        direction TB
-        NGX["Nginx<br>Reverse Proxy"]
-    end
-
+    NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
     UP -->|content downloads| SAB
@@ -67,19 +63,12 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
-    SAB ~~~ NGX
-    TRN ~~~ NGX
-    SON ~~~ NGX
-    RAD ~~~ NGX
-    JF ~~~ NGX
-    PL ~~~ NGX
-
-    NGX -->|/sabnzbd| SAB
-    NGX -->|/transmission| TRN
-    NGX -->|/sonarr| SON
-    NGX -->|/radarr| RAD
-    NGX -->|/jellyfin| JF
-    NGX -->|/plex| PL
+    SAB -->|/sabnzbd| NGX
+    TRN -->|/transmission| NGX
+    SON -->|/sonarr| NGX
+    RAD -->|/radarr| NGX
+    JF -->|/jellyfin| NGX
+    PL -->|/plex| NGX
     NGX -->|port 80| CLIENT
 ```
 
