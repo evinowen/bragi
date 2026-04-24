@@ -1,226 +1,171 @@
-# Docker Services Manager
+# Bragi
 
-A repository for managing Docker containers as systemd services on Linux systems. This tool automates the installation and configuration of Docker-based services with proper systemd integration.
+```
+                        ᛒ  ᚱ  ᚨ  ᚷ  ᛁ
+      ██████╗ ██████╗  █████╗  ██████╗ ██╗
+      ██╔══██╗██╔══██╗██╔══██╗██╔════╝ ██║
+      ██████╔╝██████╔╝███████║██║  ███╗██║
+      ██╔══██╗██╔══██╗██╔══██║██║   ██║██║
+      ██████╔╝██║  ██║██║  ██║╚██████╔╝██║
+      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
+                        ♪  ♫  ♪
+                   Norse Media Server
+```
 
-## Features
+Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles five containerized services, preconfigured to talk to each other, and wires them together into a single coherent system managed by systemd.
 
-- Automatic Docker availability checking
-- Systemd service creation for Docker containers
-- Modular service architecture
-- Support for any Linux distribution with systemd
-- Automated installation process
+## How It Works
+
+Bragi's services form a pipeline from download to playback:
+
+```
+  Usenet Provider
+        │
+        ▼
+  ┌──────────┐      ┌──────────┐      ┌────────────────┐
+  │ SABnzbd  │◄─────│  Sonarr  │      │   Television   │
+  │          │      │          │─────►│     Library    │──┐
+  │ download │─────►│ TV mgmt  │      └────────────────┘  │
+  │ manager  │      └──────────┘                          │    ┌──────────┐
+  │          │                                            ├───►│          │
+  │          │      ┌──────────┐      ┌────────────────┐  │    │ Jellyfin │
+  │          │◄─────│  Radarr  │      │     Movie      │  │    │          │
+  │          │      │          │─────►│     Library    │──┘    │  stream  │
+  │          │─────►│ film mgmt│      └────────────────┘       └──────────┘
+  └──────────┘      └──────────┘
+                                               │
+                                               ▼
+                                    ┌─────────────────────┐
+                                    │        Nginx        │
+                                    │   reverse proxy     │
+                                    │  /sabnzbd /sonarr   │
+                                    │  /radarr  /jellyfin │
+                                    └─────────────────────┘
+```
+
+1. **SABnzbd** connects to your Usenet provider and handles all downloads
+2. **Sonarr** tracks TV series releases, sends NZB jobs to SABnzbd, and sorts completed downloads into your television library
+3. **Radarr** does the same for movies, managing your movie library automatically
+4. **Jellyfin** reads both libraries and presents them as a streaming server accessible from any browser, TV app, or media player
+5. **Nginx** sits in front of everything as a reverse proxy, exposing all five services at a single IP address on port 80
+
+All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, and Jellyfin are fully wired together during installation — no manual configuration needed.
+
+## Services
+
+| Service | Image | Proxy Path | Port |
+|---------|-------|------------|------|
+| Nginx | `nginx` | `/` | 80 |
+| SABnzbd | `linuxserver/sabnzbd` | `/sabnzbd` | 8080 |
+| Sonarr | `linuxserver/sonarr` | `/sonarr` | 8989 |
+| Radarr | `linuxserver/radarr` | `/radarr` | 7878 |
+| Jellyfin | `jellyfin/jellyfin` | `/jellyfin` | 8096 |
+
+Each service runs as a Docker container and is registered as a systemd unit (`bragi.<name>`). Configuration is stored in `/opt/<name>/config/` and persists across container restarts and upgrades.
+
+### Upgrading a Service
+
+Pull the new image and restart — configuration is unaffected:
+
+```bash
+sudo docker pull linuxserver/sonarr:latest
+sudo systemctl restart bragi.sonarr
+```
 
 ## Prerequisites
 
-- Linux system with systemd
+- Linux with systemd (Ubuntu recommended)
 - Docker installed and running
-- User with sudo privileges (or run as root)
+- User with sudo privileges (or root)
 
-## Quick Start
-
-### Installation
+## Installation
 
 Clone the repository and run the installer:
 
 ```bash
-git clone https://github.com/evinowen/bragi.git && cd bragi && chmod +x install.sh && ./install.sh
+git clone https://github.com/evinowen/bragi.git
+cd bragi
+chmod +x install.sh
+./install.sh
 ```
 
-## How It Works
+The installer will ask a few questions, then handle everything else automatically.
 
-### Repository Structure
+### What the Installer Asks
 
-```
-.
-├── install.sh              # Main installation script
-├── services/               # Services directory
-│   └── servicename/        # Individual service directory
-│       ├── add.sh          # Service installation script
-│       ├── README.md       # Service documentation
-│       └── ...             # Service-specific files
-└── README.md              # This file
-```
+**Media directories** — six paths for television and movie storage:
 
-### Installation Process
+| Prompt | Purpose |
+|--------|---------|
+| Television downloads | Where SABnzbd places TV downloads |
+| Television staging | Sonarr's temporary processing area |
+| Television library | Sonarr's sorted library (Jellyfin reads this) |
+| Movie downloads | Where SABnzbd places movie downloads |
+| Movie staging | Radarr's temporary processing area |
+| Movie library | Radarr's sorted library (Jellyfin reads this) |
 
-1. **Prerequisites Check**: Verifies Docker is installed and running
-2. **Service Discovery**: Scans the `services/` directory for available services
-3. **Service Installation**: Executes each service's `install.sh` script
-4. **Systemd Integration**: Creates systemd service files for container management
+If any of these directories do not exist, the installer will offer to create them.
 
-### Service Architecture
+**Usenet credentials** — hostname, username, password, and whether to use SSL.
 
-Each service in the `services/` directory contains:
+**SABnzbd max download speed** (optional) — leave blank for unlimited.
 
-- `add.sh`: Installation script that:
-  - Pulls the required Docker image
-  - Creates the Docker container with appropriate configuration
-  - Generates a systemd service file
-  - Sets up any required directories and permissions
+### What the Installer Does
 
-- `README.md`: Documentation specific to the service
+Once you've answered the prompts, the installer:
 
-- Additional files: Any configuration files, scripts, or resources needed by the service
-
-## Available Services
-
-### SABnzbd
-
-Binary newsreader for automated Usenet downloading.
-
-- **Container**: `linuxserver/sabnzbd:latest`
-- **Web Interface**: http://localhost:8080
-- **Data Directory**: `/opt/sabnzbd/`
-
-See [services/sabnzbd/README.md](services/sabnzbd/README.md) for detailed configuration.
-
-### Sonarr
-
-Television series collection manager for Usenet and BitTorrent users.
-
-- **Container**: `linuxserver/sonarr:latest`
-- **Web Interface**: http://localhost:8989/sonarr
-- **Data Directory**: `/opt/sonarr/`
-- **Uses**: Television directories for downloads, staging, and storage
-
-See [services/sonarr/README.md](services/sonarr/README.md) for detailed configuration.
-
-### Radarr
-
-Movie collection manager for Usenet and BitTorrent users.
-
-- **Container**: `linuxserver/radarr:latest`
-- **Web Interface**: http://localhost:7878/radarr
-- **Data Directory**: `/opt/radarr/`
-- **Uses**: Movie directories for downloads, staging, and storage
-
-See [services/radarr/README.md](services/radarr/README.md) for detailed configuration.
+1. Pulls all five Docker images
+2. Creates each container with the correct volume mounts, environment variables, and network configuration
+3. Registers each container as a systemd service and enables it to start on boot
+4. Starts all services and waits for them to become healthy
+5. Configures Sonarr and Radarr: admin authentication, SABnzbd download client, root folders, remote path mappings, and Usenet indexers
+6. Configures Jellyfin: admin user, Television and Movies media libraries, and base URL for the Nginx proxy
+7. Prints all service URLs and generated admin credentials
 
 ## Managing Services
 
-### Starting Services
+All services run as `bragi.<name>` systemd units:
 
 ```bash
-sudo systemctl start bragi.<service-name>
+# Start / stop / restart
+sudo systemctl start   bragi.jellyfin
+sudo systemctl stop    bragi.jellyfin
+sudo systemctl restart bragi.jellyfin
+
+# Check status
+sudo systemctl status bragi.jellyfin
+
+# Enable / disable autostart on boot
+sudo systemctl enable  bragi.jellyfin
+sudo systemctl disable bragi.jellyfin
 ```
 
-### Stopping Services
+Available names: `nginx`, `sabnzbd`, `sonarr`, `radarr`, `jellyfin`
+
+To view logs:
 
 ```bash
-sudo systemctl stop bragi.<service-name>
+sudo journalctl -u bragi.sonarr -f
+docker logs bragi.sonarr
 ```
 
-### Restarting Services
+## Deploy Script
+
+`deploy/` contains a TypeScript script that provisions a fresh GCP Compute Engine VM, runs the full installer non-interactively using `expect`, and verifies that all services pass health checks. It is used for end-to-end testing of the installer against a clean Ubuntu environment.
+
+### Prerequisites
+
+[Node.js](https://nodejs.org/) 22 and the [gcloud CLI](https://cloud.google.com/sdk/docs/install) must be installed and authenticated.
 
 ```bash
-sudo systemctl restart bragi.<service-name>
+cd deploy
+nvm use        # if using nvm
+npm install
 ```
-
-### Checking Status
-
-```bash
-sudo systemctl status bragi.<service-name>
-```
-
-### Enable Autostart on Boot
-
-```bash
-sudo systemctl enable bragi.<service-name>
-```
-
-### Disable Autostart
-
-```bash
-sudo systemctl disable bragi.<service-name>
-```
-
-## Adding New Services
-
-To add a new service to this repository:
-
-1. Create a directory under `services/` with your service name
-2. Create an `add.sh` script that:
-   - Pulls the required Docker image
-   - Creates and configures the container
-   - Creates a systemd service file
-   - Sets up any required directories
-3. Make the script executable: `chmod +x services/yourservice/add.sh`
-4. Create a `README.md` documenting the service configuration
-5. Test the installation process
-
-### Service Install Script Template
-
-```bash
-#!/bin/bash
-
-set -euo pipefail
-
-SERVICE_NAME="bragi.your-service"
-CONTAINER_NAME="bragi.your-service"
-IMAGE="your/image:latest"
-
-create_container() {
-    echo "Creating Docker container..."
-    docker create \\
-        --name="$CONTAINER_NAME" \\
-        --restart=unless-stopped \\
-        -p 8080:8080 \\
-        "$IMAGE"
-    echo "✓ Container created"
-}
-
-create_systemd_service() {
-    echo "Creating systemd service..."
-
-    local service_file="/etc/systemd/system/${SERVICE_NAME}.service"
-
-    sudo tee "$service_file" > /dev/null << EOF
-[Unit]
-Description=Bragi Your Service Docker Container
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/bin/docker start ${CONTAINER_NAME}
-ExecStop=/usr/bin/docker stop ${CONTAINER_NAME}
-TimeoutStartSec=0
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    sudo systemctl daemon-reload
-    echo "✓ Systemd service created"
-}
-
-main() {
-    echo "Installing your service..."
-    create_container
-    create_systemd_service
-    echo "✓ Service installed successfully!"
-}
-
-main "$@"
-```
-
-## Testing
-
-`deploy/deploy.ts` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
-
-### What the test does
-
-1. Creates an Ubuntu VM on GCP Compute Engine
-2. Installs Docker, git, and `expect` on the VM
-3. Clones the bragi repository and runs `install.sh` non-interactively using `expect`
-4. Verifies that all systemd unit files exist and services are enabled and active
-5. Verifies that all Docker containers exist and data/media directories were created
-6. Deletes the VM and reports a pass/fail summary
 
 ### Configuration
 
-Create a `deploy/deploy.json` file to configure the deployment:
+Create `deploy/deploy.json` (excluded from version control — do not commit it):
 
 ```json
 {
@@ -228,6 +173,9 @@ Create a `deploy/deploy.json` file to configure the deployment:
   "gcp_zone": "us-west1-a",
   "setup_firewall": true,
   "skip_cleanup": false,
+  "sabnzbd": {
+    "max_download_speed": ""
+  },
   "usenet": {
     "host": "news.example.com",
     "username": "youruser",
@@ -238,130 +186,109 @@ Create a `deploy/deploy.json` file to configure the deployment:
     {
       "name": "MyIndexer",
       "url": "https://api.myindexer.com",
-      "api_key": "abc123"
+      "api_key": "abc123",
+      "television": true,
+      "movies": true
     }
   ]
 }
 ```
 
-`deploy/deploy.json` is excluded from version control via `.gitignore` — do not commit it. See `deploy/deploy.json.example` for a full example with all fields.
+See `deploy/deploy.json.example` for a complete example with all optional fields.
 
-| Key               | Description                                                             |
-|-------------------|-------------------------------------------------------------------------|
-| `gcp_project_id`  | GCP project to create the test VM in                                    |
-| `gcp_zone`        | Compute Engine zone for the VM                                          |
-| `gcp_machine_type`| Machine type (default: `e2-standard-2`)                                 |
-| `skip_cleanup`    | Set to `true` to keep the VM after the test                             |
-| `setup_firewall`  | Set to `true` to create firewall rules for SSH and service ports        |
-| `usenet`          | Usenet provider credentials passed to SABnzbd                           |
-| `indexers`        | List of Newznab indexers to configure in Sonarr and Radarr              |
+#### Top-level fields
 
-Each entry in `indexers` supports the following fields:
+| Field | Description |
+|-------|-------------|
+| `gcp_project_id` | GCP project to create the test VM in |
+| `gcp_zone` | Compute Engine zone (e.g. `us-west1-a`) |
+| `gcp_machine_type` | Machine type (default: `e2-standard-2`) |
+| `setup_firewall` | Create firewall rules for SSH and HTTP on first run |
+| `skip_cleanup` | Set to `true` to leave the VM running after the test (useful for debugging) |
 
-| Field             | Required | Description                                                                          |
-|-------------------|----------|--------------------------------------------------------------------------------------|
-| `name`            | yes      | Display name for the indexer                                                         |
-| `url`             | yes      | Base URL of the indexer (e.g. `https://api.nzbgeek.info`)                            |
-| `api_key`         | yes      | API key issued by the indexer; use `""` for indexers that don't require one          |
-| `television`      | yes      | `true` to add this indexer to Sonarr                                                 |
-| `movies`          | yes      | `true` to add this indexer to Radarr                                                 |
-| `api_path`        | no       | API path on the indexer host (default: `/api`)                                       |
-| `categories`      | no       | Newznab category IDs to search; overrides the service default (see table below)      |
-| `anime_categories`| no       | Anime-specific category IDs for Sonarr (Sonarr only, default: `[]`)                  |
+#### `usenet`
 
-#### Newznab Categories
+| Field | Description |
+|-------|-------------|
+| `host` | Usenet provider hostname |
+| `username` | Account username |
+| `password` | Account password |
+| `ssl` | `true` to connect over SSL (recommended) |
 
-| ID   | Category           | ID   | Category           |
-|------|--------------------|------|--------------------|
-| 2000 | Movies             | 5000 | TV                 |
-| 2010 | Movies/Foreign     | 5010 | TV/WEB-DL          |
-| 2020 | Movies/Other       | 5020 | TV/Foreign         |
-| 2030 | Movies/SD          | 5030 | TV/SD              |
-| 2040 | Movies/HD          | 5040 | TV/HD              |
-| 2045 | Movies/UHD         | 5045 | TV/UHD             |
-| 2050 | Movies/BluRay      | 5050 | TV/Other           |
-| 2060 | Movies/3D          | 5060 | TV/Sport           |
-|      |                    | 5070 | TV/Anime           |
-|      |                    | 5080 | TV/Documentary     |
+#### `sabnzbd`
 
-**Defaults** — when `categories` is not specified, each service uses a sensible default:
-- Sonarr: `[5030, 5040]` (TV/SD and TV/HD)
+| Field | Description |
+|-------|-------------|
+| `max_download_speed` | Cap download speed (e.g. `100M`, `1G`); omit or leave empty for unlimited |
+
+#### `indexers`
+
+Each entry configures a Newznab-compatible indexer in Sonarr and/or Radarr:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Display name for the indexer |
+| `url` | yes | Indexer base URL (e.g. `https://api.nzbgeek.info`) |
+| `api_key` | yes | API key; use `""` for indexers that don't require one |
+| `television` | yes | `true` to add this indexer to Sonarr |
+| `movies` | yes | `true` to add this indexer to Radarr |
+| `api_path` | no | API endpoint path (default: `/api`) |
+| `categories` | no | Newznab category IDs to search; overrides the service default |
+| `anime_categories` | no | Anime-specific category IDs for Sonarr (default: `[]`) |
+
+**Default categories** when `categories` is not specified:
+- Sonarr: `[5030, 5040]` (TV/SD, TV/HD)
 - Radarr: `[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]` (all Movies subcategories)
 
-Indexers that use a non-standard API path or anime-only categories (like Anime Tosho) should override these explicitly. See `deploy/deploy.json.example` for an example.
+#### Newznab Category Reference
 
-### Prerequisites
+| ID | Category | ID | Category |
+|----|----------|----|----------|
+| 2000 | Movies | 5000 | TV |
+| 2010 | Movies/Foreign | 5010 | TV/WEB-DL |
+| 2020 | Movies/Other | 5020 | TV/Foreign |
+| 2030 | Movies/SD | 5030 | TV/SD |
+| 2040 | Movies/HD | 5040 | TV/HD |
+| 2045 | Movies/UHD | 5045 | TV/UHD |
+| 2050 | Movies/BluRay | 5050 | TV/Other |
+| 2060 | Movies/3D | 5060 | TV/Sport |
+| | | 5070 | TV/Anime |
+| | | 5080 | TV/Documentary |
 
-Ensure [Node.js](https://nodejs.org/) 22 is installed. Using [nvm](https://github.com/nvm-sh/nvm) is recommended:
-
-```bash
-cd deploy
-nvm use
-npm install
-```
-
-Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated.
-
-### Running the test
+### Running the Deploy Script
 
 ```bash
 cd deploy
 npm run deploy
 ```
 
-To keep the VM running after the test (useful for debugging), set `"skip_cleanup": true` in `deploy/deploy.json`.
+The script prints service URLs and generated admin credentials when it completes. With `skip_cleanup: true`, the VM stays running so you can SSH in and inspect the result. Delete it manually when done:
+
+```bash
+gcloud compute instances delete <instance-name> --zone=<zone> --project=<project-id>
+```
 
 ## Troubleshooting
 
-### Docker Not Found
+**Docker not installed**
 
-```
-ERROR: Docker is not installed or not in PATH
-```
+Follow the official guide: https://docs.docker.com/engine/install/
 
-Install Docker following the official documentation: https://docs.docker.com/engine/install/
+**Docker daemon not running or permission denied**
 
-### Docker Daemon Not Running
-
-```
-ERROR: Docker daemon is not running or user lacks permissions
-```
-
-Start the Docker service:
 ```bash
 sudo systemctl start docker
+sudo usermod -aG docker $USER && newgrp docker
 ```
 
-Add your user to the docker group:
+**A service failed to start**
+
 ```bash
-sudo usermod -aG docker $USER
-newgrp docker
+sudo systemctl status bragi.<name>
+docker logs bragi.<name>
 ```
 
-### Permission Denied
+**Jellyfin not accessible at `/jellyfin`**
 
-If you get permission errors, ensure your user has sudo privileges or run the installer as root.
+Jellyfin takes up to two minutes to fully initialize on first start. If the proxy returns a 404, wait a moment and reload. If the issue persists, check that `bragi.jellyfin` is active and that the base URL is set to `/jellyfin` in Jellyfin's network settings.
 
-### Service Failed to Start
-
-Check the service status and logs:
-```bash
-sudo systemctl status bragi.<service-name>
-docker logs bragi.<container-name>
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add your service following the guidelines above
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is open source. Please check the LICENSE file for details.
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
