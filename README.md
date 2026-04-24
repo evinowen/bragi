@@ -23,28 +23,30 @@ flowchart LR
     UP([Usenet Provider])
     BT_SRC([BitTorrent Swarm])
 
-    subgraph downloaders[Download Clients]
-        direction TB
-        SAB["SABnzbd<br>Usenet Downloader<br>/sabnzbd"]
-        TRN["Transmission<br>BitTorrent Downloader<br>/transmission"]
-    end
+    subgraph pipeline[Services]
+        subgraph downloaders[Download Clients]
+            direction TB
+            SAB["SABnzbd<br>Usenet Downloader<br>/sabnzbd"]
+            TRN["Transmission<br>BitTorrent Downloader<br>/transmission"]
+        end
 
-    subgraph managers[Media Managers]
-        direction TB
-        SON["Sonarr<br>Television Manager<br>/sonarr"]
-        RAD["Radarr<br>Movie Manager<br>/radarr"]
-    end
+        subgraph managers[Media Managers]
+            direction TB
+            SON["Sonarr<br>Television Manager<br>/sonarr"]
+            RAD["Radarr<br>Movie Manager<br>/radarr"]
+        end
 
-    subgraph libraries[Libraries]
-        direction TB
-        TL[(Television Library)]
-        ML[(Movie Library)]
-    end
+        subgraph libraries[Libraries]
+            direction TB
+            TL[(Television Library)]
+            ML[(Movie Library)]
+        end
 
-    subgraph servers[Media Servers]
-        direction TB
-        JF["Jellyfin<br>Media Server<br>/jellyfin"]
-        PL["Plex<br>Media Server<br>/plex"]
+        subgraph servers[Media Servers]
+            direction TB
+            JF["Jellyfin<br>Media Server<br>/jellyfin"]
+            PL["Plex<br>Media Server<br>/plex"]
+        end
     end
 
     NGX["Nginx<br>Reverse Proxy"]
@@ -63,6 +65,7 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
+    pipeline --- NGX
     NGX -->|port 80| CLIENT
 ```
 
