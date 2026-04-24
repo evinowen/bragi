@@ -173,4 +173,6 @@ main() {
     echo "  http://$host_ip:7878/radarr (from network)"
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]:-$0}" == "${0}" ]]; then
+    main "$@"
+fi

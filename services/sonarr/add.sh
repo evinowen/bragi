@@ -173,4 +173,6 @@ main() {
     echo "  http://$host_ip:8989/sonarr (from network)"
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]:-$0}" == "${0}" ]]; then
+    main "$@"
+fi
