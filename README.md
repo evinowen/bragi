@@ -9,24 +9,6 @@
       ██████╔╝██║  ██║██║  ██║╚██████╔╝██║
       ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
                     Media Server
-
-           ♪   ♫   ♪
-        .-----------.
-       /  o       o  \
-      |       ^       |
-      |     (   )     |
-       \    ~~~~~    /
-        '-~~~~~~~~~-'
-            |   |
-        ,---'   '---,
-       /    ♪   ♫    \
-      /               \
-     /  ♫   ♪   ♫   ♪  \
-    /___________________\
-            |   |
-           /|   |\
-          /_|___|_\
-      ~ Skald of Valhalla ~
 ```
 
 Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles six containerized services, and wires them together into a single coherent system managed by systemd.
