@@ -67,6 +67,13 @@ flowchart LR
     TL -->|library reads| PL
     ML -->|library reads| PL
 
+    SAB ~~~ NGX
+    TRN ~~~ NGX
+    SON ~~~ NGX
+    RAD ~~~ NGX
+    JF ~~~ NGX
+    PL ~~~ NGX
+
     NGX -->|/sabnzbd| SAB
     NGX -->|/transmission| TRN
     NGX -->|/sonarr| SON
