@@ -2,7 +2,7 @@
   "name": "bragi-deploy",
   "version": "1.0.0",
   "scripts": {
-    "deploy": "tsx deploy.ts"
+    "deploy": "tsx src/index.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

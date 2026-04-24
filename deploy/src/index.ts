@@ -10,8 +10,10 @@ import { spawnSync, SpawnSyncOptions, SpawnSyncReturns } from 'child_process';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SCRIPT_DIR    = path.dirname(path.resolve(process.argv[1] ?? ''));
-const CONFIG_FILE   = path.join(SCRIPT_DIR, 'deploy.json');
+const DEPLOY_DIR  = path.join(__dirname, '..');
+const SCRIPTS_DIR = path.join(DEPLOY_DIR, 'scripts');
+const CONFIG_FILE = path.join(DEPLOY_DIR, 'deploy.json');
+
 const IMAGE_FAMILY  = 'ubuntu-2204-lts';
 const IMAGE_PROJECT = 'ubuntu-os-cloud';
 const DISK_SIZE     = '30GB';
@@ -356,173 +358,29 @@ async function createInstance(): Promise<void> {
 
 // ── Helper scripts ────────────────────────────────────────────────────────────
 
-const RUN_INSTALL_TEMPLATE = String.raw`#!/bin/bash
-set -euo pipefail
-
-export INDEXERS_JSON="$(echo '__INDEXERS_B64__' | base64 -d)"
-export SABNZBD_MAX_DOWNLOAD_SPEED="__SABNZBD_MAX_SPEED__"
-
-cd /root
-git clone https://github.com/evinowen/bragi.git
-cd bragi
-chmod +x install.sh
-
-expect - << 'EXPECT'
-set timeout 1200
-log_user 1
-
-spawn bash /root/bragi/install.sh
-
-expect {
-    -re {Server host:} {
-        send "__USENET_HOST__\r"
-        exp_continue
-    }
-    -re {Usenet username:} {
-        send "__USENET_USER__\r"
-        exp_continue
-    }
-    -re {Usenet password:} {
-        send "__USENET_PASS__\r"
-        exp_continue
-    }
-    -re {Enable SSL\? \[Y/n\]:} {
-        send "__SSL_RESPONSE__\r"
-        exp_continue
-    }
-    -re {Choose configuration mode \[s/i\]:} {
-        send "s\r"
-        exp_continue
-    }
-    -re {Base directory \[/media/television\]:} {
-        send "\r"
-        exp_continue
-    }
-    -re {Base directory \[/media/movies\]:} {
-        send "\r"
-        exp_continue
-    }
-    -re {Would you like to create these directories\? \[y/N\]:} {
-        send "y\r"
-        exp_continue
-    }
-    eof
+function script(name: string): string {
+  return fs.readFileSync(path.join(SCRIPTS_DIR, name), 'utf8');
 }
-
-set wait_result [wait]
-set exit_code [lindex $wait_result 3]
-exit $exit_code
-EXPECT
-`;
-
-const SETUP_SH = String.raw`#!/bin/bash
-set -euo pipefail
-export DEBIAN_FRONTEND=noninteractive
-
-apt-get update -qq || apt-get update -qq
-apt-get install -y -qq git expect
-
-curl -fsSL https://get.docker.com | sh
-systemctl enable docker
-systemctl start docker
-`;
-
-const VERIFY_SH = String.raw`#!/bin/bash
-
-pass() { echo "PASS: $*"; }
-fail() { echo "FAIL: $*"; }
-
-check() {
-    local description="$1"
-    shift
-    if "$@" &>/dev/null; then
-        pass "$description"
-    else
-        fail "$description"
-    fi
-}
-
-for svc in nginx sabnzbd sonarr radarr; do
-    check "Unit file exists: bragi.$svc.service" \
-        test -f "/etc/systemd/system/bragi.$svc.service"
-done
-
-for svc in nginx sabnzbd sonarr radarr; do
-    check "Service enabled: bragi.$svc" \
-        bash -c "systemctl is-enabled bragi.$svc 2>/dev/null | grep -qx 'enabled'"
-done
-
-for svc in nginx sabnzbd sonarr radarr; do
-    check "Service active: bragi.$svc" \
-        bash -c "systemctl is-active bragi.$svc 2>/dev/null | grep -qx 'active'"
-done
-
-for container in nginx sabnzbd sonarr radarr; do
-    check "Docker container exists: bragi.$container" \
-        bash -c "docker ps -a --format '{{.Names}}' | grep -qx 'bragi.$container'"
-done
-
-for dir in /opt/nginx /opt/sabnzbd /opt/sonarr /opt/radarr; do
-    check "Data directory exists: $dir" test -d "$dir"
-done
-
-for dir in \
-    /media/television/download \
-    /media/television/stage \
-    /media/television/library \
-    /media/movies/download \
-    /media/movies/stage \
-    /media/movies/library
-do
-    check "Media directory exists: $dir" test -d "$dir"
-done
-
-check_http() {
-    local description="$1"
-    local url="$2"
-    local attempt=1
-    local status
-
-    while [[ $attempt -le 12 ]]; do
-        status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -L "$url")
-        if [[ "$status" == "200" ]]; then
-            pass "$description"
-            return
-        fi
-        sleep 5
-        attempt=$((attempt + 1))
-    done
-
-    fail "$description (got HTTP $status after 60s)"
-}
-
-check_http "HTTP 200: SABnzbd"          "http://localhost:8080"
-check_http "HTTP 200: Sonarr"           "http://localhost:8989/sonarr"
-check_http "HTTP 200: Radarr"           "http://localhost:7878/radarr"
-check_http "HTTP 200: Nginx -> SABnzbd" "http://localhost/sabnzbd"
-check_http "HTTP 200: Nginx -> Sonarr"  "http://localhost/sonarr"
-check_http "HTTP 200: Nginx -> Radarr"  "http://localhost/radarr"
-`;
 
 function writeScript(filePath: string, content: string): void {
-  fs.writeFileSync(filePath, content.replace(/^\n/, ''), { encoding: 'utf8' });
+  fs.writeFileSync(filePath, content, { encoding: 'utf8' });
 }
 
 function writeScripts(): void {
-  writeScript(path.join(workDir, 'setup.sh'), SETUP_SH);
+  writeScript(path.join(workDir, 'setup.sh'), script('setup.sh'));
 
   const indexersB64 = Buffer.from(JSON.stringify(indexers)).toString('base64');
   const sslResponse = usenetSsl ? '' : 'n';
-  const runInstall = RUN_INSTALL_TEMPLATE
-    .replace('__INDEXERS_B64__',     () => indexersB64)
-    .replace('__USENET_HOST__',      () => usenetHost)
-    .replace('__USENET_USER__',      () => usenetUser)
-    .replace('__USENET_PASS__',      () => usenetPass)
-    .replace('__SSL_RESPONSE__',     () => sslResponse)
+  const runInstall = script('run_install.sh')
+    .replace('__INDEXERS_B64__',      () => indexersB64)
+    .replace('__USENET_HOST__',       () => usenetHost)
+    .replace('__USENET_USER__',       () => usenetUser)
+    .replace('__USENET_PASS__',       () => usenetPass)
+    .replace('__SSL_RESPONSE__',      () => sslResponse)
     .replace('__SABNZBD_MAX_SPEED__', () => sabnzbdMaxSpeed);
   writeScript(path.join(workDir, 'run_install.sh'), runInstall);
 
-  writeScript(path.join(workDir, 'verify.sh'), VERIFY_SH);
+  writeScript(path.join(workDir, 'verify.sh'), script('verify.sh'));
 }
 
 // ── Phases ────────────────────────────────────────────────────────────────────
