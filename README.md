@@ -20,14 +20,14 @@ Bragi's services form a pipeline from download to playback:
 ```mermaid
 flowchart TD
     UP([Usenet Provider])
-    SAB["SABnzbd\nDownload Manager"]
-    SON["Sonarr\nTelevision Manager"]
-    RAD["Radarr\nMovie Manager"]
-    TL[("Television Library")]
-    ML[("Movie Library")]
-    JF["Jellyfin\nMedia Server"]
-    PL["Plex\nMedia Server"]
-    NGX["Nginx\nReverse Proxy"]
+    SAB["SABnzbd<br>Download Manager"]
+    SON["Sonarr<br>Television Manager"]
+    RAD["Radarr<br>Movie Manager"]
+    TL[(Television Library)]
+    ML[(Movie Library)]
+    JF["Jellyfin<br>Media Server"]
+    PL["Plex<br>Media Server"]
+    NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
     UP -->|content downloads| SAB
