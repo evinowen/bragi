@@ -175,6 +175,9 @@ Create `deploy/deploy.json` (excluded from version control — do not commit it)
   "gcp_zone": "us-west1-a",
   "setup_firewall": true,
   "skip_cleanup": false,
+  "services": {
+    "radarr": false
+  },
   "sabnzbd": {
     "max_download_speed": ""
   },
@@ -207,6 +210,7 @@ See `deploy/deploy.json.example` for a complete example with all optional fields
 | `gcp_machine_type` | Machine type (default: `e2-standard-2`)                                                  |
 | `setup_firewall`   | Create firewall rules for SSH and HTTP on first run                                      |
 | `skip_cleanup`     | Set to `true` to leave the virtual machine running after the test (useful for debugging) |
+| `services`         | Object controlling which services are installed; each key is a service name set to `false` to disable it — services omitted from this object default to enabled |
 
 #### `usenet`
 

@@ -23,4 +23,5 @@ export interface Config {
     ssl?: boolean
   }
   indexers?: Indexer[]
+  services?: Record<string, boolean>
 }

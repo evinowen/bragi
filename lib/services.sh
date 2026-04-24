@@ -1,3 +1,71 @@
+declare -A SERVICE_ENABLED
+
+select_services() {
+    echo
+    echo "=== Service Selection ==="
+
+    local -a available_services=()
+
+    for service_dir in "$SERVICES_DIR"/*; do
+        if [[ -d "$service_dir" ]]; then
+            available_services+=("$(basename "$service_dir")")
+        fi
+    done
+
+    for service in "${available_services[@]}"; do
+        SERVICE_ENABLED[$service]="true"
+    done
+
+    local selection=""
+
+    while [[ "$selection" != "a" && "$selection" != "c" ]]; do
+        echo "Install options:"
+        echo "  [a] All services (recommended)"
+        echo "  [c] Choose services individually"
+        echo -n "Install all services? [A/c]: "
+        read selection </dev/tty
+        selection=$(echo "${selection:-a}" | tr '[:upper:]' '[:lower:]')
+
+        if [[ -z "$selection" ]]; then
+            selection="a"
+        fi
+
+        if [[ "$selection" != "a" && "$selection" != "c" ]]; then
+            echo "  Please enter 'a' for all or 'c' to choose individually."
+        fi
+    done
+
+    if [[ "$selection" == "c" ]]; then
+        echo
+        echo "Select which services to install:"
+
+        for service in "${available_services[@]}"; do
+            local response=""
+
+            while [[ "$response" != "y" && "$response" != "n" && "$response" != "" ]]; do
+                echo -n "  Install $service? [Y/n]: "
+                read response </dev/tty
+                response=$(echo "${response:-y}" | tr '[:upper:]' '[:lower:]')
+            done
+
+            if [[ "$response" == "n" ]]; then
+                SERVICE_ENABLED[$service]="false"
+            fi
+        done
+    fi
+
+    echo
+    echo "Services selected:"
+
+    for service in "${available_services[@]}"; do
+        if [[ "${SERVICE_ENABLED[$service]:-true}" == "true" ]]; then
+            echo "  ✓ $service"
+        else
+            echo "  - $service (disabled)"
+        fi
+    done
+}
+
 install_services() {
     if [[ ! -d "$SERVICES_DIR" ]]; then
         echo "ERROR: Services directory not found: $SERVICES_DIR"
@@ -15,6 +83,12 @@ install_services() {
         if [[ -d "$service_dir" ]]; then
             local service_name=$(basename "$service_dir")
             local install_script="$service_dir/add.sh"
+
+            if [[ "${SERVICE_ENABLED[$service_name]:-true}" == "false" ]]; then
+                echo
+                echo "Skipping disabled service: $service_name"
+                continue
+            fi
 
             echo
             echo "Installing service: $service_name"
@@ -223,6 +297,11 @@ configure_services() {
 
             if [[ -f "$configure_script" ]]; then
                 local service_name=$(basename "$service_dir")
+
+                if [[ "${SERVICE_ENABLED[$service_name]:-true}" == "false" ]]; then
+                    continue
+                fi
+
                 echo
                 echo "Configuring service: $service_name"
                 bash "$configure_script" 2>&1 || true

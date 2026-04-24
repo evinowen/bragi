@@ -51,6 +51,7 @@ main() {
     create_media_directories
     create_docker_network
 
+    select_services
     install_services
     enable_and_start_services
 

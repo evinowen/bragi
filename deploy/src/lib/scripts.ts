@@ -14,6 +14,12 @@ function writeScript(filePath: string, content: string): void {
 export function writeScripts(): void {
   writeScript(path.join(work.dir, 'setup.sh'), readScript('setup.sh'))
 
+  const allServices = ['nginx', 'sabnzbd', 'sonarr', 'radarr', 'jellyfin']
+  const enabledServices = allServices.filter(svc => config.services[svc])
+  const disabledServices = allServices.filter(svc => !config.services[svc])
+  const enabledServicesStr = enabledServices.join(' ')
+  const disabledServicesStr = disabledServices.join(' ')
+
   const indexersB64 = Buffer.from(JSON.stringify(config.indexers)).toString('base64')
   const sslResponse = config.usenetSsl ? '' : 'n'
   const runInstall = readScript('run_install.sh')
@@ -23,7 +29,10 @@ export function writeScripts(): void {
     .replace('__USENET_PASS__', () => config.usenetPass)
     .replace('__SSL_RESPONSE__', () => sslResponse)
     .replace('__SABNZBD_MAX_SPEED__', () => config.sabnzbdMaxSpeed)
+    .replace('__DISABLED_SERVICES__', () => disabledServicesStr)
   writeScript(path.join(work.dir, 'run_install.sh'), runInstall)
 
-  writeScript(path.join(work.dir, 'verify.sh'), readScript('verify.sh'))
+  const verify = readScript('verify.sh')
+    .replace('__ENABLED_SERVICES__', () => enabledServicesStr)
+  writeScript(path.join(work.dir, 'verify.sh'), verify)
 }

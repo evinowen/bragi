@@ -32,6 +32,24 @@ expect {
         send "__SSL_RESPONSE__\r"
         exp_continue
     }
+    -re {Install all services\? \[A/c\]:} {
+        if {"__DISABLED_SERVICES__" ne ""} {
+            send "c\r"
+        } else {
+            send "a\r"
+        }
+        exp_continue
+    }
+    -re {Install (\w+)\? \[Y/n\]:} {
+        set service $expect_out(1,string)
+        set disabled {__DISABLED_SERVICES__}
+        if {$disabled ne "" && [lsearch -exact [split $disabled] $service] >= 0} {
+            send "n\r"
+        } else {
+            send "y\r"
+        }
+        exp_continue
+    }
     -re {Choose configuration mode \[s/i\]:} {
         send "s\r"
         exp_continue

@@ -33,4 +33,5 @@ export const config = {
   usenetSsl: true,
   indexers: [] as Indexer[],
   sabnzbdMaxSpeed: '',
+  services: {} as Record<string, boolean>,
 }

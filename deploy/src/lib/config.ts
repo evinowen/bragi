@@ -24,4 +24,10 @@ export function loadConfig(): void {
 
   config.indexers = cfg.indexers ?? []
   config.sabnzbdMaxSpeed = cfg.sabnzbd?.max_download_speed ?? ''
+
+  const allServices = ['nginx', 'sabnzbd', 'sonarr', 'radarr', 'jellyfin']
+  const servicesCfg = cfg.services ?? {}
+  config.services = Object.fromEntries(
+    allServices.map(svc => [svc, servicesCfg[svc] !== false])
+  )
 }
