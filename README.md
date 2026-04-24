@@ -18,7 +18,7 @@ Named for the Norse god of poetry and music — the skald of Valhalla, who playe
 Bragi's services form a pipeline from download to playback:
 
 ```mermaid
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+%%{init: {'flowchart': {'defaultRenderer': 'elk', 'curve': 'linear'}}}%%
 flowchart LR
     UP([Usenet Provider])
     BT_SRC([BitTorrent Swarm])
