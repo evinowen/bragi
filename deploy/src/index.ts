@@ -25,6 +25,7 @@ const SSH_USER = 'bragi'
 function requireExecutable(name: string): string {
   const cmd = process.platform === 'win32' ? 'where' : 'which'
   const result = spawnSync(cmd, [name], { encoding: 'utf8' })
+
   if (result.status !== 0 || !result.stdout.trim()) {
     console.error(`ERROR: '${name}' not found on PATH.`)
     process.exit(1)
@@ -132,6 +133,7 @@ function logFailure(msg: string): void {
 function run(cmd: string, args: string[], opts: SpawnSyncOptions = {}): void {
   const [resolvedCmd, resolvedArgs] = spawnArgs(cmd, args)
   const result = spawnSync(resolvedCmd, resolvedArgs, { stdio: 'inherit', ...opts })
+
   if (result.status !== 0) {
     process.exit(result.status ?? 1)
   }
@@ -140,6 +142,7 @@ function run(cmd: string, args: string[], opts: SpawnSyncOptions = {}): void {
 function runOutput(cmd: string, args: string[]): string {
   const [resolvedCmd, resolvedArgs] = spawnArgs(cmd, args)
   const result = spawnSync(resolvedCmd, resolvedArgs, { encoding: 'utf8' })
+
   if (result.status !== 0) {
     console.error(result.stderr)
     process.exit(result.status ?? 1)
@@ -243,6 +246,7 @@ process.on('exit', cleanup)
 
 function checkPrerequisites(): void {
   log('Checking local prerequisites...')
+
   if (!projectId) {
     console.error('ERROR: gcp_project_id is not set in deploy.json.')
     process.exit(1)
@@ -261,6 +265,7 @@ function ensureFirewallRule(name: string, ports: string): void {
   const result = runCapture(GCLOUD, [
     'compute', 'firewall-rules', 'describe', name, `--project=${projectId}`,
   ])
+
   if (result.status === 0) {
     log(`Firewall rule '${name}' already exists, skipping`)
     return
@@ -318,6 +323,7 @@ async function createInstance(): Promise<void> {
     'compute', 'instances', 'describe', instanceName,
     `--zone=${zone}`, `--project=${projectId}`,
   ])
+
   if (existing.status !== 0) {
     run(GCLOUD, [
       'compute', 'instances', 'create', instanceName,
@@ -349,10 +355,12 @@ async function createInstance(): Promise<void> {
 
   injectSshKey()
   log('Waiting for SSH to become available...')
+
   for (let attempt = 1; attempt <= 24; attempt++) {
     if (sshRun(['echo', 'ssh-ready'], { stdio: 'pipe' }).status === 0) break
     log(`SSH not yet ready (attempt ${attempt}/24)...`)
     await sleep(10_000)
+
     if (attempt === 24) {
       console.error('ERROR: SSH not available after 240 seconds')
       process.exit(1)
@@ -412,6 +420,7 @@ function verifyInstallation(): void {
   log('Verifying installation...')
   scpTo(path.join(workDir, 'verify.sh'), '/tmp/verify.sh')
   const result = sshRun(['sudo', 'bash', '/tmp/verify.sh'], { stdio: 'pipe' })
+
   for (const line of result.stdout.split('\n')) {
     if (!line.trim()) continue
     console.log(line)

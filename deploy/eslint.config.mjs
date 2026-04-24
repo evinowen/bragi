@@ -22,6 +22,7 @@ export default tseslint.config(
     rules: {
       '@stylistic/padding-line-between-statements': ['error',
         { blankLine: 'always', prev: 'block-like', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'block-like' },
       ],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       'unicorn/prefer-module': 'off',            // CommonJS project
