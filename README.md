@@ -55,10 +55,11 @@ flowchart LR
 ```
 
 1. **SABnzbd** connects to your Usenet provider and handles all downloads
-2. **Sonarr** tracks television series releases, sends download jobs to SABnzbd, and sorts completed downloads into your television library
-3. **Radarr** does the same for movies, managing your movie library automatically
-4. **Jellyfin** reads both libraries and presents them as a streaming server accessible from any browser, television app, or media player
-5. **Nginx** sits in front of everything as a reverse proxy, exposing all other services at a single IP address on port 80
+2. **Sonarr** tracks television series releases, sends download requests to SABnzbd, and sorts completed downloads into your television library
+3. **Radarr** tracks movie releases, sends download requests to SABnzbd, and sorts completed downloads into your movie library
+4. **Jellyfin** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
+5. **Plex** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
+6. **Nginx** acts as a reverse proxy, exposing all other services at a single IP address on port 80
 
 All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, and Jellyfin are fully wired together during installation.
 
