@@ -67,6 +67,8 @@ flowchart LR
 
     pipeline --- NGX
     NGX -->|port 80| CLIENT
+
+    style pipeline fill:transparent
 ```
 
 1. **SABnzbd** connects to your Usenet provider and handles Usenet downloads
