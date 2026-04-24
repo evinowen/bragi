@@ -340,9 +340,16 @@ display_service_urls() {
                 ;;
             "sabnzbd")
                 if [[ "$has_nginx" == "true" ]]; then
-                    echo "  SABnzbd:  http://$host_ip/sabnzbd"
+                    echo "  SABnzbd:      http://$host_ip/sabnzbd"
                 else
-                    echo "  SABnzbd:  http://$host_ip:8080"
+                    echo "  SABnzbd:      http://$host_ip:8080"
+                fi
+                ;;
+            "transmission")
+                if [[ "$has_nginx" == "true" ]]; then
+                    echo "  Transmission: http://$host_ip/transmission/web/"
+                else
+                    echo "  Transmission: http://$host_ip:9091/transmission/web/"
                 fi
                 ;;
             "sonarr")

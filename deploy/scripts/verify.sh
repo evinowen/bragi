@@ -88,6 +88,12 @@ for svc in "${ENABLED_SERVICES[@]}"; do
                 check_http "HTTP 200: Nginx -> SABnzbd"  "http://localhost/sabnzbd"
             fi
             ;;
+        transmission)
+            check_http "HTTP 200: Transmission"     "http://localhost:9091/transmission/web/"
+            if [[ "$nginx_enabled" == "true" ]]; then
+                check_http "HTTP 200: Nginx -> Transmission" "http://localhost/transmission/web/"
+            fi
+            ;;
         sonarr)
             check_http "HTTP 200: Sonarr"           "http://localhost:8989/sonarr"
             if [[ "$nginx_enabled" == "true" ]]; then

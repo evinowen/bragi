@@ -11,7 +11,7 @@
                     Media Server
 ```
 
-Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles six containerized services, and wires them together into a single coherent system managed by systemd.
+Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles seven containerized services, and wires them together into a single coherent system managed by systemd.
 
 ## How It Works
 
@@ -22,7 +22,9 @@ flowchart LR
     subgraph pipe[" "]
         direction BT
         UP([Usenet Provider])
-        SAB["SABnzbd<br>Download Manager"]
+        BT_SRC([BitTorrent Swarm])
+        SAB["SABnzbd<br>Usenet Downloader"]
+        TRN["Transmission<br>BitTorrent Downloader"]
         SON["Sonarr<br>Television Manager"]
         RAD["Radarr<br>Movie Manager"]
         TL[(Television Library)]
@@ -31,10 +33,15 @@ flowchart LR
         PL["Plex<br>Media Server"]
 
         UP -->|content downloads| SAB
+        BT_SRC -->|content downloads| TRN
         SON -->|download requests| SAB
+        SON -->|download requests| TRN
         SAB -->|completed downloads| SON
+        TRN -->|completed downloads| SON
         RAD -->|download requests| SAB
+        RAD -->|download requests| TRN
         SAB -->|completed downloads| RAD
+        TRN -->|completed downloads| RAD
         SON -->|sorts into| TL
         RAD -->|sorts into| ML
         TL -->|library reads| JF
@@ -51,28 +58,31 @@ flowchart LR
     SON -->|/sonarr| NGX
     RAD -->|/radarr| NGX
     SAB -->|/sabnzbd| NGX
+    TRN -->|/transmission| NGX
     NGX -->|port 80| CLIENT
 ```
 
-1. **SABnzbd** connects to your Usenet provider and handles all downloads
-2. **Sonarr** tracks television series releases, sends download requests to SABnzbd, and sorts completed downloads into your television library
-3. **Radarr** tracks movie releases, sends download requests to SABnzbd, and sorts completed downloads into your movie library
-4. **Jellyfin** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
-5. **Plex** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
-6. **Nginx** acts as a reverse proxy, exposing all other services at a single IP address on port 80
+1. **SABnzbd** connects to your Usenet provider and handles Usenet downloads
+2. **Transmission** connects to the BitTorrent swarm and handles torrent downloads
+3. **Sonarr** tracks television series releases, sends download requests to SABnzbd and Transmission, and sorts completed downloads into your television library
+4. **Radarr** tracks movie releases, sends download requests to SABnzbd and Transmission, and sorts completed downloads into your movie library
+5. **Jellyfin** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
+6. **Plex** reads your television and movie libraries and presents them as a streaming server accessible from any browser, television app, or media player
+7. **Nginx** acts as a reverse proxy, exposing all other services at a single IP address on port 80
 
-All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, and Jellyfin are fully wired together during installation.
+All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, Transmission, and Jellyfin are fully wired together during installation.
 
 ## Services
 
-| Service  | Image                   | Proxy Path  | Port  |
-|----------|-------------------------|-------------|-------|
-| Nginx    | `nginx`                 | `/`         | 80    |
-| SABnzbd  | `linuxserver/sabnzbd`   | `/sabnzbd`  | 8080  |
-| Sonarr   | `linuxserver/sonarr`    | `/sonarr`   | 8989  |
-| Radarr   | `linuxserver/radarr`    | `/radarr`   | 7878  |
-| Jellyfin | `jellyfin/jellyfin`     | `/jellyfin` | 8096  |
-| Plex     | `plexinc/pms-docker`    | `/plex`     | 32400 |
+| Service      | Image                      | Proxy Path     | Port  |
+|--------------|----------------------------|----------------|-------|
+| Nginx        | `nginx`                    | `/`            | 80    |
+| SABnzbd      | `linuxserver/sabnzbd`      | `/sabnzbd`     | 8080  |
+| Transmission | `linuxserver/transmission` | `/transmission`| 9091  |
+| Sonarr       | `linuxserver/sonarr`       | `/sonarr`      | 8989  |
+| Radarr       | `linuxserver/radarr`       | `/radarr`      | 7878  |
+| Jellyfin     | `jellyfin/jellyfin`        | `/jellyfin`    | 8096  |
+| Plex         | `plexinc/pms-docker`       | `/plex`        | 32400 |
 
 Each service runs as a Docker container and is registered as a systemd unit (`bragi.<name>`). Configuration is stored in `/opt/<name>/config/` and persists across container restarts and upgrades.
 
@@ -127,7 +137,7 @@ If any of these directories do not exist, the installer will offer to create the
 
 Once you've answered the prompts, the installer:
 
-1. Pulls all six Docker images
+1. Pulls all seven Docker images
 2. Creates each container with the correct volume mounts, environment variables, and network configuration
 3. Registers each container as a systemd service and enables it to start on boot
 4. Starts all services and waits for them to become healthy
@@ -153,7 +163,7 @@ sudo systemctl enable  bragi.jellyfin
 sudo systemctl disable bragi.jellyfin
 ```
 
-Available names: `nginx`, `sabnzbd`, `sonarr`, `radarr`, `jellyfin`
+Available names: `nginx`, `sabnzbd`, `transmission`, `sonarr`, `radarr`, `jellyfin`, `plex`
 
 To view logs:
 
