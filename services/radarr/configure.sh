@@ -7,6 +7,11 @@ BASE_URL="http://localhost:7878/radarr/api/v3"
 SABNZBD_API_KEY=$(grep -oP '^api_key\s*=\s*\K\S+' /opt/sabnzbd/config/sabnzbd.ini 2>/dev/null || true)
 SABNZBD_HOST="sabnzbd.bragi"
 
+is_service_enabled() {
+    [[ -z "${ENABLED_SERVICES:-}" ]] && return 0
+    [[ " $ENABLED_SERVICES " == *" $1 "* ]]
+}
+
 wait_for_api() {
     local max_attempts=12
     local attempt=1
@@ -118,6 +123,11 @@ configure_root_folder() {
 }
 
 configure_download_client() {
+    if ! is_service_enabled sabnzbd; then
+        echo "- SABnzbd is disabled — skipping download client configuration"
+        return 0
+    fi
+
     if [[ -z "$SABNZBD_API_KEY" ]]; then
         echo "⚠️  SABnzbd API key not found — skipping download client configuration"
         return 0
@@ -223,6 +233,11 @@ PYEOF
 }
 
 configure_remote_path_mapping() {
+    if ! is_service_enabled sabnzbd; then
+        echo "- SABnzbd is disabled — skipping remote path mapping"
+        return 0
+    fi
+
     if [[ -z "$SABNZBD_API_KEY" ]]; then
         echo "⚠️  SABnzbd API key not found — skipping remote path mapping"
         return 0

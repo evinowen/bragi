@@ -14,6 +14,11 @@ RADARR_BASE_URL="http://localhost:7878/radarr/api/v3"
 TRANSMISSION_USER="${ADMIN_USERNAME:-}"
 TRANSMISSION_PASS="${ADMIN_PASSWORD:-}"
 
+is_service_enabled() {
+    [[ -z "${ENABLED_SERVICES:-}" ]] && return 0
+    [[ " $ENABLED_SERVICES " == *" $1 "* ]]
+}
+
 wait_for_transmission() {
     local max_attempts=12
     local attempt=1
@@ -65,6 +70,11 @@ configure_transmission_download_dir() {
 }
 
 configure_sonarr_download_client() {
+    if ! is_service_enabled sonarr; then
+        echo "- Sonarr is disabled — skipping Sonarr download client configuration"
+        return 0
+    fi
+
     if [[ -z "$SONARR_API_KEY" ]]; then
         echo "- Sonarr API key not found — skipping Sonarr download client configuration"
         return 0
@@ -115,6 +125,10 @@ configure_sonarr_download_client() {
 }
 
 configure_sonarr_remote_path_mapping() {
+    if ! is_service_enabled sonarr; then
+        return 0
+    fi
+
     if [[ -z "$SONARR_API_KEY" ]]; then
         return 0
     fi
@@ -135,6 +149,11 @@ configure_sonarr_remote_path_mapping() {
 }
 
 configure_radarr_download_client() {
+    if ! is_service_enabled radarr; then
+        echo "- Radarr is disabled — skipping Radarr download client configuration"
+        return 0
+    fi
+
     if [[ -z "$RADARR_API_KEY" ]]; then
         echo "- Radarr API key not found — skipping Radarr download client configuration"
         return 0
@@ -185,6 +204,10 @@ configure_radarr_download_client() {
 }
 
 configure_radarr_remote_path_mapping() {
+    if ! is_service_enabled radarr; then
+        return 0
+    fi
+
     if [[ -z "$RADARR_API_KEY" ]]; then
         return 0
     fi

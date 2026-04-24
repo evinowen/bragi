@@ -289,7 +289,19 @@ configure_services() {
     echo "=== Configuring Services ==="
 
     INDEXERS_JSON="${INDEXERS_JSON:-[]}"
-    export ADMIN_USERNAME ADMIN_PASSWORD INDEXERS_JSON
+
+    local -a enabled_list=()
+    for service_dir in "$SERVICES_DIR"/*; do
+        if [[ -d "$service_dir" ]]; then
+            local svc=$(basename "$service_dir")
+            if [[ "${SERVICE_ENABLED[$svc]:-true}" != "false" ]]; then
+                enabled_list+=("$svc")
+            fi
+        fi
+    done
+    ENABLED_SERVICES="${enabled_list[*]}"
+
+    export ADMIN_USERNAME ADMIN_PASSWORD INDEXERS_JSON ENABLED_SERVICES
 
     for service_dir in "$SERVICES_DIR"/*; do
         if [[ -d "$service_dir" ]]; then
