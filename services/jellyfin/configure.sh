@@ -96,6 +96,78 @@ PYEOF
     fi
 }
 
+configure_libraries() {
+    echo "Configuring Jellyfin media libraries..."
+
+    if python3 << PYEOF
+import json, urllib.request, urllib.parse, sys
+
+base_url = '${BASE_URL}'
+admin_username = '${ADMIN_USERNAME:-admin}'
+admin_password = '${ADMIN_PASSWORD:-}'
+auth_header = 'MediaBrowser Client="Bragi", Device="bragi-setup", DeviceId="bragi-configure", Version="1.0"'
+
+try:
+    data = json.dumps({"Username": admin_username, "Pw": admin_password}).encode()
+    req = urllib.request.Request(
+        base_url + '/Users/AuthenticateByName',
+        data=data,
+        headers={'Content-Type': 'application/json', 'Authorization': auth_header},
+        method='POST'
+    )
+    with urllib.request.urlopen(req) as r:
+        auth = json.loads(r.read())
+
+    token = auth['AccessToken']
+    auth_token_header = auth_header + ', Token="' + token + '"'
+
+    req = urllib.request.Request(
+        base_url + '/Library/VirtualFolders',
+        headers={'Authorization': auth_token_header}
+    )
+    with urllib.request.urlopen(req) as r:
+        existing = json.loads(r.read())
+
+    existing_names = {folder.get('Name', '') for folder in existing}
+
+    for name, collection_type, path in [
+        ('Television', 'tvshows', '/media/television'),
+        ('Movies', 'movies', '/media/movies'),
+    ]:
+        if name in existing_names:
+            print('- Library already exists: ' + name)
+            continue
+
+        params = urllib.parse.urlencode([
+            ('name', name),
+            ('collectionType', collection_type),
+            ('paths', path),
+            ('refreshLibrary', 'false')
+        ])
+        body = json.dumps({
+            'LibraryOptions': {
+                'PathInfos': [{'Path': path}]
+            }
+        }).encode()
+        req = urllib.request.Request(
+            base_url + '/Library/VirtualFolders?' + params,
+            data=body,
+            headers={'Content-Type': 'application/json', 'Authorization': auth_token_header},
+            method='POST'
+        )
+        urllib.request.urlopen(req)
+        print('Added library: ' + name + ' -> ' + path)
+except Exception as e:
+    print('Error: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+    then
+        echo "✓ Jellyfin media libraries configured"
+    else
+        echo "⚠️  Failed to configure Jellyfin media libraries"
+    fi
+}
+
 configure_base_url() {
     echo "Configuring Jellyfin base URL..."
 
@@ -166,6 +238,8 @@ main() {
         echo "⚠️  Startup wizard failed — skipping remaining configuration"
         exit 0
     fi
+
+    configure_libraries
 
     configure_base_url
 
