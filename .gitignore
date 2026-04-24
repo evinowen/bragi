@@ -2,3 +2,5 @@
 
 deploy.yaml
 deploy.env
+deploy/deploy.json
+deploy/node_modules/

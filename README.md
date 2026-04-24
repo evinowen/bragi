@@ -207,7 +207,7 @@ main "$@"
 
 ## Testing
 
-`deploy.py` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
+`deploy/deploy.ts` validates the full installation by spinning up a temporary GCP Compute Engine instance, running the bragi installer non-interactively, and verifying that all services and containers are correctly installed and running. The instance is automatically deleted when the test completes.
 
 ### What the test does
 
@@ -220,27 +220,31 @@ main "$@"
 
 ### Configuration
 
-Create a `deploy.yaml` file in the repository root to configure the deployment:
+Create a `deploy/deploy.json` file to configure the deployment:
 
-```yaml
-gcp_project_id: your-project-id
-gcp_zone: us-west1-a
-setup_firewall: true
-skip_cleanup: false
-
-usenet:
-  host: news.example.com
-  username: youruser
-  password: yourpassword
-  ssl: true
-
-indexers:
-  - name: MyIndexer
-    url: https://api.myindexer.com
-    api_key: abc123
+```json
+{
+  "gcp_project_id": "your-project-id",
+  "gcp_zone": "us-west1-a",
+  "setup_firewall": true,
+  "skip_cleanup": false,
+  "usenet": {
+    "host": "news.example.com",
+    "username": "youruser",
+    "password": "yourpassword",
+    "ssl": true
+  },
+  "indexers": [
+    {
+      "name": "MyIndexer",
+      "url": "https://api.myindexer.com",
+      "api_key": "abc123"
+    }
+  ]
+}
 ```
 
-`deploy.yaml` is excluded from version control via `.gitignore` — do not commit it.
+`deploy/deploy.json` is excluded from version control via `.gitignore` — do not commit it. See `deploy/deploy.json.example` for a full example with all fields.
 
 | Key               | Description                                                             |
 |-------------------|-------------------------------------------------------------------------|
@@ -284,14 +288,16 @@ Each entry in `indexers` supports the following fields:
 - Sonarr: `[5030, 5040]` (TV/SD and TV/HD)
 - Radarr: `[2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060]` (all Movies subcategories)
 
-Indexers that use a non-standard API path or anime-only categories (like Anime Tosho) should override these explicitly. See `deploy.yaml.example` for an example.
+Indexers that use a non-standard API path or anime-only categories (like Anime Tosho) should override these explicitly. See `deploy/deploy.json.example` for an example.
 
 ### Prerequisites
 
-Install `pyyaml` if not already available:
+Ensure [Node.js](https://nodejs.org/) 22 is installed. Using [nvm](https://github.com/nvm-sh/nvm) is recommended:
 
 ```bash
-pip3 install pyyaml
+cd deploy
+nvm use
+npm install
 ```
 
 Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed and authenticated.
@@ -299,10 +305,11 @@ Ensure the [gcloud CLI](https://cloud.google.com/sdk/docs/install) is installed 
 ### Running the test
 
 ```bash
-python3 deploy.py
+cd deploy
+npm run deploy
 ```
 
-To keep the VM running after the test (useful for debugging), set `skip_cleanup: true` in `deploy.yaml`.
+To keep the VM running after the test (useful for debugging), set `"skip_cleanup": true` in `deploy/deploy.json`.
 
 ## Troubleshooting
 
