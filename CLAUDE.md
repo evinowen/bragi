@@ -295,6 +295,7 @@ After services are successfully started and verified, the installer displays web
 4. Create service-specific `README.md`
 5. Test installation process
 6. Update main README.md — this includes all of the following:
+   - Add the service to the Mermaid pipeline diagram (nodes and edges)
    - Add the service to the Services table
    - Update any prose that states a specific number of services (e.g. "five containerized services" → "six containerized services") to reflect the new count
    - Update the installer step that names how many Docker images are pulled

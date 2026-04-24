@@ -26,6 +26,7 @@ flowchart TD
     TL[("Television Library")]
     ML[("Movie Library")]
     JF["Jellyfin\nMedia Server"]
+    PL["Plex\nMedia Server"]
     NGX["Nginx\nReverse Proxy"]
     CLIENT([Web Browser or Media Player])
 
@@ -38,11 +39,14 @@ flowchart TD
     RAD -->|sorts into| ML
     TL -->|library reads| JF
     ML -->|library reads| JF
+    TL -->|library reads| PL
+    ML -->|library reads| PL
     CLIENT -->|port 80| NGX
     NGX -->|/sabnzbd| SAB
     NGX -->|/sonarr| SON
     NGX -->|/radarr| RAD
     NGX -->|/jellyfin| JF
+    NGX -->|/plex| PL
 ```
 
 1. **SABnzbd** connects to your Usenet provider and handles all downloads
