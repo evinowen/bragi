@@ -4,16 +4,17 @@ set -euo pipefail
 
 BASE_URL="http://localhost:8096"
 
-wait_for_service() {
+wait_for_startup_wizard() {
     local max_attempts=24
     local attempt=1
 
     while [[ $attempt -le $max_attempts ]]; do
         local status
         status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
-            "${BASE_URL}/health" 2>/dev/null || true)
+            "${BASE_URL}/Startup/User" 2>/dev/null || true)
 
-        if [[ "$status" == "200" ]]; then
+        if [[ "$status" == "200" || "$status" == "404" ]]; then
+            echo "$status"
             return 0
         fi
 
@@ -21,10 +22,22 @@ wait_for_service() {
         attempt=$((attempt + 1))
     done
 
+    echo "timeout"
     return 1
 }
 
 complete_startup_wizard() {
+    echo "Checking startup wizard status..."
+
+    local wizard_status
+    wizard_status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+        "${BASE_URL}/Startup/User" 2>/dev/null || true)
+
+    if [[ "$wizard_status" == "404" ]]; then
+        echo "- Startup wizard already completed"
+        return 0
+    fi
+
     echo "Completing Jellyfin startup wizard..."
 
     if python3 << PYEOF
@@ -139,9 +152,12 @@ PYEOF
 }
 
 main() {
-    echo "Waiting for Jellyfin..."
+    echo "Waiting for Jellyfin startup wizard to become ready..."
 
-    if ! wait_for_service; then
+    local wizard_ready
+    wizard_ready=$(wait_for_startup_wizard)
+
+    if [[ "$wizard_ready" == "timeout" ]]; then
         echo "⚠️  Jellyfin did not become ready — skipping configuration"
         exit 0
     fi
