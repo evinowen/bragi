@@ -2,11 +2,18 @@
   "name": "bragi-deploy",
   "version": "1.0.0",
   "scripts": {
-    "deploy": "tsx src/index.ts"
+    "deploy": "tsx src/index.ts",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^2.0.0",
     "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-unicorn": "^56.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0"
   }
 }
