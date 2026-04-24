@@ -18,30 +18,30 @@ Named for the Norse god of poetry and music — the skald of Valhalla, who playe
 Bragi's services form a pipeline from download to playback:
 
 ```mermaid
-flowchart LR
+flowchart BT
     UP([Usenet Provider])
     BT_SRC([BitTorrent Swarm])
 
     subgraph downloaders[Download Clients]
-        direction TB
+        direction LR
         SAB["SABnzbd<br>Usenet Downloader"]
         TRN["Transmission<br>BitTorrent Downloader"]
     end
 
     subgraph managers[Media Managers]
-        direction TB
+        direction LR
         SON["Sonarr<br>Television Manager"]
         RAD["Radarr<br>Movie Manager"]
     end
 
     subgraph libraries[Libraries]
-        direction TB
+        direction LR
         TL[(Television Library)]
         ML[(Movie Library)]
     end
 
     subgraph servers[Media Servers]
-        direction TB
+        direction LR
         JF["Jellyfin<br>Media Server"]
         PL["Plex<br>Media Server"]
     end
