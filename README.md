@@ -8,8 +8,7 @@
       ██╔══██╗██╔══██╗██╔══██║██║   ██║██║
       ██████╔╝██║  ██║██║  ██║╚██████╔╝██║
       ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
-                        ♪  ♫  ♪
-                   Norse Media Server
+                    Media Server
 ```
 
 Named for the Norse god of poetry and music — the skald of Valhalla, who played the golden harp for the gods — Bragi is a self-hosted media server solution that downloads, organizes, and plays your movie and television collection. It assembles five containerized services, preconfigured to talk to each other, and wires them together into a single coherent system managed by systemd.
@@ -18,35 +17,38 @@ Named for the Norse god of poetry and music — the skald of Valhalla, who playe
 
 Bragi's services form a pipeline from download to playback:
 
-```
-  Usenet Provider
-        │
-        ▼
-  ┌──────────┐      ┌──────────┐      ┌────────────────┐
-  │ SABnzbd  │◄─────│  Sonarr  │      │   Television   │
-  │          │      │          │─────►│     Library    │──┐
-  │ download │─────►│ TV mgmt  │      └────────────────┘  │
-  │ manager  │      └──────────┘                          │    ┌──────────┐
-  │          │                                            ├───►│          │
-  │          │      ┌──────────┐      ┌────────────────┐  │    │ Jellyfin │
-  │          │◄─────│  Radarr  │      │     Movie      │  │    │          │
-  │          │      │          │─────►│     Library    │──┘    │  stream  │
-  │          │─────►│ film mgmt│      └────────────────┘       └──────────┘
-  └──────────┘      └──────────┘
-                                               │
-                                               ▼
-                                    ┌─────────────────────┐
-                                    │        Nginx        │
-                                    │   reverse proxy     │
-                                    │  /sabnzbd /sonarr   │
-                                    │  /radarr  /jellyfin │
-                                    └─────────────────────┘
+```mermaid
+flowchart TD
+    UP([Usenet Provider])
+    SAB["SABnzbd\nDownload Manager"]
+    SON["Sonarr\nTelevision Manager"]
+    RAD["Radarr\nMovie Manager"]
+    TL[("Television Library")]
+    ML[("Movie Library")]
+    JF["Jellyfin\nMedia Server"]
+    NGX["Nginx\nReverse Proxy"]
+    CLIENT([Web Browser or Media Player])
+
+    UP -->|content downloads| SAB
+    SON -->|download requests| SAB
+    SAB -->|completed downloads| SON
+    RAD -->|download requests| SAB
+    SAB -->|completed downloads| RAD
+    SON -->|sorts into| TL
+    RAD -->|sorts into| ML
+    TL -->|library reads| JF
+    ML -->|library reads| JF
+    CLIENT -->|port 80| NGX
+    NGX -->|/sabnzbd| SAB
+    NGX -->|/sonarr| SON
+    NGX -->|/radarr| RAD
+    NGX -->|/jellyfin| JF
 ```
 
 1. **SABnzbd** connects to your Usenet provider and handles all downloads
-2. **Sonarr** tracks TV series releases, sends NZB jobs to SABnzbd, and sorts completed downloads into your television library
+2. **Sonarr** tracks television series releases, sends download jobs to SABnzbd, and sorts completed downloads into your television library
 3. **Radarr** does the same for movies, managing your movie library automatically
-4. **Jellyfin** reads both libraries and presents them as a streaming server accessible from any browser, TV app, or media player
+4. **Jellyfin** reads both libraries and presents them as a streaming server accessible from any browser, television app, or media player
 5. **Nginx** sits in front of everything as a reverse proxy, exposing all five services at a single IP address on port 80
 
 All containers run on a shared Docker network (`bragi`) so they communicate by hostname without exposing ports to the host. Sonarr, Radarr, SABnzbd, and Jellyfin are fully wired together during installation — no manual configuration needed.
@@ -97,7 +99,7 @@ The installer will ask a few questions, then handle everything else automaticall
 
 | Prompt | Purpose |
 |--------|---------|
-| Television downloads | Where SABnzbd places TV downloads |
+| Television downloads | Where SABnzbd places television downloads |
 | Television staging | Sonarr's temporary processing area |
 | Television library | Sonarr's sorted library (Jellyfin reads this) |
 | Movie downloads | Where SABnzbd places movie downloads |
@@ -151,7 +153,7 @@ docker logs bragi.sonarr
 
 ## Deploy Script
 
-`deploy/` contains a TypeScript script that provisions a fresh GCP Compute Engine VM, runs the full installer non-interactively using `expect`, and verifies that all services pass health checks. It is used for end-to-end testing of the installer against a clean Ubuntu environment.
+`deploy/` contains a TypeScript script that provisions a fresh Google Cloud Platform Compute Engine virtual machine, runs the full installer non-interactively using `expect`, and verifies that all services pass health checks. It is used for end-to-end testing of the installer against a clean Ubuntu environment.
 
 ### Prerequisites
 
@@ -200,11 +202,11 @@ See `deploy/deploy.json.example` for a complete example with all optional fields
 
 | Field | Description |
 |-------|-------------|
-| `gcp_project_id` | GCP project to create the test VM in |
-| `gcp_zone` | Compute Engine zone (e.g. `us-west1-a`) |
+| `gcp_project_id` | Google Cloud Platform project to create the test virtual machine in |
+| `gcp_zone` | Compute Engine zone (for example, `us-west1-a`) |
 | `gcp_machine_type` | Machine type (default: `e2-standard-2`) |
 | `setup_firewall` | Create firewall rules for SSH and HTTP on first run |
-| `skip_cleanup` | Set to `true` to leave the VM running after the test (useful for debugging) |
+| `skip_cleanup` | Set to `true` to leave the virtual machine running after the test (useful for debugging) |
 
 #### `usenet`
 
@@ -219,16 +221,16 @@ See `deploy/deploy.json.example` for a complete example with all optional fields
 
 | Field | Description |
 |-------|-------------|
-| `max_download_speed` | Cap download speed (e.g. `100M`, `1G`); omit or leave empty for unlimited |
+| `max_download_speed` | Cap download speed (for example, `100M`, `1G`); omit or leave empty for unlimited |
 
 #### `indexers`
 
-Each entry configures a Newznab-compatible indexer in Sonarr and/or Radarr:
+Each entry configures a Newznab-compatible indexer in Sonarr, Radarr, or both:
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `name` | yes | Display name for the indexer |
-| `url` | yes | Indexer base URL (e.g. `https://api.nzbgeek.info`) |
+| `url` | yes | Indexer base URL (for example, `https://api.nzbgeek.info`) |
 | `api_key` | yes | API key; use `""` for indexers that don't require one |
 | `television` | yes | `true` to add this indexer to Sonarr |
 | `movies` | yes | `true` to add this indexer to Radarr |
@@ -262,7 +264,7 @@ cd deploy
 npm run deploy
 ```
 
-The script prints service URLs and generated admin credentials when it completes. With `skip_cleanup: true`, the VM stays running so you can SSH in and inspect the result. Delete it manually when done:
+The script prints service URLs and generated admin credentials when it completes. With `skip_cleanup: true`, the virtual machine stays running so you can log in and inspect the result. Delete it manually when done:
 
 ```bash
 gcloud compute instances delete <instance-name> --zone=<zone> --project=<project-id>
