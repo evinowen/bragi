@@ -19,39 +19,46 @@ Bragi's services form a pipeline from download to playback:
 
 ```mermaid
 flowchart LR
-    subgraph pipe[" "]
-        direction BT
-        UP([Usenet Provider])
-        BT_SRC([BitTorrent Swarm])
+    UP([Usenet Provider])
+    BT_SRC([BitTorrent Swarm])
+
+    subgraph downloaders[Download Clients]
         SAB["SABnzbd<br>Usenet Downloader"]
         TRN["Transmission<br>BitTorrent Downloader"]
+    end
+
+    subgraph managers[Media Managers]
         SON["Sonarr<br>Television Manager"]
         RAD["Radarr<br>Movie Manager"]
-        TL[(Television Library)]
-        ML[(Movie Library)]
+    end
+
+    TL[(Television Library)]
+    ML[(Movie Library)]
+
+    subgraph servers[Media Servers]
         JF["Jellyfin<br>Media Server"]
         PL["Plex<br>Media Server"]
-
-        UP -->|content downloads| SAB
-        BT_SRC -->|content downloads| TRN
-        SON -->|download requests| SAB
-        SON -->|download requests| TRN
-        SAB -->|completed downloads| SON
-        TRN -->|completed downloads| SON
-        RAD -->|download requests| SAB
-        RAD -->|download requests| TRN
-        SAB -->|completed downloads| RAD
-        TRN -->|completed downloads| RAD
-        SON -->|sorts into| TL
-        RAD -->|sorts into| ML
-        TL -->|library reads| JF
-        ML -->|library reads| JF
-        TL -->|library reads| PL
-        ML -->|library reads| PL
     end
 
     NGX["Nginx<br>Reverse Proxy"]
     CLIENT([Web Browser or Media Player])
+
+    UP -->|content downloads| SAB
+    BT_SRC -->|content downloads| TRN
+    SON -->|download requests| SAB
+    SON -->|download requests| TRN
+    SAB -->|completed downloads| SON
+    TRN -->|completed downloads| SON
+    RAD -->|download requests| SAB
+    RAD -->|download requests| TRN
+    SAB -->|completed downloads| RAD
+    TRN -->|completed downloads| RAD
+    SON -->|sorts into| TL
+    RAD -->|sorts into| ML
+    TL -->|library reads| JF
+    ML -->|library reads| JF
+    TL -->|library reads| PL
+    ML -->|library reads| PL
 
     JF -->|/jellyfin| NGX
     PL -->|/plex| NGX
