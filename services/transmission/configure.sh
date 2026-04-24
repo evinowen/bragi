@@ -30,6 +30,40 @@ wait_for_transmission() {
     return 1
 }
 
+configure_transmission_download_dir() {
+    echo "Configuring Transmission default download directory..."
+
+    local auth_flag=()
+    if [[ -n "$TRANSMISSION_USER" ]]; then
+        auth_flag=(-u "${TRANSMISSION_USER}:${TRANSMISSION_PASS}")
+    fi
+
+    local session_id
+    session_id=$(curl -s -i "${auth_flag[@]}" -X POST \
+        -d '{"method":"session-get"}' \
+        "http://localhost:${TRANSMISSION_PORT}/transmission/rpc" 2>/dev/null \
+        | grep -i "^X-Transmission-Session-Id:" \
+        | awk '{print $2}' \
+        | tr -d '\r\n')
+
+    if [[ -z "$session_id" ]]; then
+        echo "⚠️  Failed to get Transmission session ID"
+        return 1
+    fi
+
+    local status
+    status=$(curl -s -o /dev/null -w "%{http_code}" "${auth_flag[@]}" -X POST \
+        -H "X-Transmission-Session-Id: ${session_id}" \
+        -d '{"method":"session-set","arguments":{"download-dir":"/downloads"}}' \
+        "http://localhost:${TRANSMISSION_PORT}/transmission/rpc")
+
+    if [[ "$status" == "200" ]]; then
+        echo "✓ Transmission download directory set to /downloads"
+    else
+        echo "⚠️  Failed to set Transmission download directory (HTTP $status)"
+    fi
+}
+
 configure_sonarr_download_client() {
     if [[ -z "$SONARR_API_KEY" ]]; then
         echo "- Sonarr API key not found — skipping Sonarr download client configuration"
@@ -51,8 +85,8 @@ configure_sonarr_download_client() {
     {"name": "urlBase",            "value": "%s"},
     {"name": "username",           "value": "%s"},
     {"name": "password",           "value": "%s"},
-    {"name": "tvDirectory",        "value": "/downloads/television"},
-    {"name": "tvCategory",         "value": ""},
+    {"name": "tvDirectory",        "value": ""},
+    {"name": "tvCategory",         "value": "television"},
     {"name": "tvImportedCategory", "value": ""},
     {"name": "recentTvPriority",   "value": 0},
     {"name": "olderTvPriority",    "value": 0},
@@ -121,8 +155,8 @@ configure_radarr_download_client() {
     {"name": "urlBase",               "value": "%s"},
     {"name": "username",              "value": "%s"},
     {"name": "password",              "value": "%s"},
-    {"name": "movieDirectory",        "value": "/downloads/movies"},
-    {"name": "movieCategory",         "value": ""},
+    {"name": "movieDirectory",        "value": ""},
+    {"name": "movieCategory",         "value": "movies"},
     {"name": "movieImportedCategory", "value": ""},
     {"name": "recentMoviePriority",   "value": 0},
     {"name": "olderMoviePriority",    "value": 0},
@@ -178,6 +212,7 @@ main() {
     fi
     echo "✓ Transmission is ready"
 
+    configure_transmission_download_dir
     configure_sonarr_download_client
     configure_sonarr_remote_path_mapping
     configure_radarr_download_client
